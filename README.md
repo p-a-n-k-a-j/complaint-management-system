@@ -3,7 +3,7 @@
 A modern backend system for managing complaints with secure authentication, role-based access, and real-time updates.
 
 ## 🚀 Features
-- User Registration & Login (JWT आधारित authentication)
+- User Registration & Login (JWT based authentication)
 - Role-Based Access (USER, ADMIN, SUPER_ADMIN)
 - Complaint Create, Track, Update
 - Email Notifications (status updates, verification)
