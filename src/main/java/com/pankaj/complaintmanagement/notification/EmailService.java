@@ -5,9 +5,10 @@ import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
-
+@Service
 public class EmailService {
     private static final String CONSTANT_FROM = "Complaint Management Team";
     private static final String CONSTANT_FROM_EMAIL="pankajtirdiya2004@gmail.com";
