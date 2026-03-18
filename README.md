@@ -1,6 +1,5 @@
 # Complaint Management System (Spring Boot)
-
-A modern backend system for managing complaints with secure authentication, role-based access, and real-time updates.
+A modern Spring Boot version of my earlier JSP/Servlet-based Complaint Management System. This system provides secure authentication, role-based access control, and real-time complaint tracking.
 
 ## 🚀 Features
 - User Registration & Login (JWT based authentication)
