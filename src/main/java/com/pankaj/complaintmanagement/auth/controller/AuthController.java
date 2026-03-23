@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.auth.controller;
 
+import com.pankaj.complaintmanagement.auth.dto.LoginRequest;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.service.AuthService;
 import com.pankaj.complaintmanagement.common.response.ApiResponse;
@@ -37,8 +38,9 @@ public class AuthController {
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("User created successfully"));
     }
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(){
-        return null;
+    public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest loginRequest){
+        Map<String, String> accessTokenAndRefreshToken =authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "login is successfully done", accessTokenAndRefreshToken));
     }
     @PostMapping("/refresh")
     public ResponseEntity<Map<String, String>> refreshToken(){

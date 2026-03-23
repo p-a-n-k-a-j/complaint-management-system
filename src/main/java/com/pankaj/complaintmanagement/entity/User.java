@@ -23,6 +23,15 @@ public class User {
     private Set<UserRole> roles;
     private boolean isActive;
     private LocalDateTime createdAt;
+    private String refreshToken;
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 
     public Long getId() {
         return id;
