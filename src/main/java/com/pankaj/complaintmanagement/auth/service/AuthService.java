@@ -4,9 +4,14 @@ import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
+import com.pankaj.complaintmanagement.exception.custom.UsernameNotFoundException;
 import com.pankaj.complaintmanagement.notification.EmailService;
+import com.pankaj.complaintmanagement.security.CustomUserDetails;
+import com.pankaj.complaintmanagement.security.CustomUserDetailsService;
+import com.pankaj.complaintmanagement.security.JwtService;
 import com.pankaj.complaintmanagement.util.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +25,13 @@ public class AuthService {
     private final AuthRepository authRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
     @Autowired
-    public AuthService(AuthRepository authRepository,EmailService emailService, PasswordEncoder passwordEncoder) {
+    public AuthService(AuthRepository authRepository, EmailService emailService, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.authRepository = authRepository;
         this.emailService = emailService;
         this.passwordEncoder=passwordEncoder;
+        this.jwtService = jwtService;
     }
     @Transactional
     public void register(RegisterRequest registerRequest){
@@ -43,7 +50,18 @@ public class AuthService {
 
     }
 
-    public Map<String, String> login(String email, String password) {
-        return null;
+    public Map<String, String> login(String email, String rawPassword) {
+
+        User user = authRepository.findByEmail(email);
+        if(user ==null){
+            throw new UsernameNotFoundException("Username not found");
+        }
+        if(passwordEncoder.matches(rawPassword, user.getPassword())){
+            CustomUserDetails userDetails = new CustomUserDetails(user);
+            String accessToken = jwtService.accessToken(userDetails);
+            String refreshToken = jwtService.refreshToken(user.getEmail());
+            return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
+        }
+        throw new BadCredentialsException("Invalid credentials");
     }
 }
