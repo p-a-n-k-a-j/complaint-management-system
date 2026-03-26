@@ -8,7 +8,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.message.ObjectArrayMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -41,15 +40,19 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
             String token = requestHeader.substring(7);
            claims= jwtService.extractAllClaims(token);
            tokenType = jwtService.extractTokenType(claims);
-         if(tokenType ==null ||claims ==null){
-             filterChain.doFilter(request, response);
-             return;
-         }
+
         }
 
-
+        if(tokenType ==null ||claims ==null){
+            filterChain.doFilter(request, response);
+            return;
+        }
         //step 1 check if the requestUri is refresh or token is also refresh then send ErrorResponse
         String requestUri = request.getRequestURI();
+        if (requestUri.startsWith("/api/auth")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         boolean isRefreshEndpoint = requestUri.contains("auth/refresh") || requestUri.contains("/refresh");
         boolean tryingWithRefreshEndpointOrAccessToken = isRefreshEndpoint && !Objects.equals(tokenType, TokenType.ACCESS);
         boolean tryingWithNotRefreshEndpointOrRefreshToken = !isRefreshEndpoint && Objects.equals(tokenType, TokenType.REFRESH);

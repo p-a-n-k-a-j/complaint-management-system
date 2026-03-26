@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public class EmailService {
     private static final String CONSTANT_FROM = "Complaint Management Team";
-    private static final String CONSTANT_FROM_EMAIL="pankajtirdiya2004@gmail.com";
+    private static final String CONSTANT_FROM_EMAIL="noreply.complaintmanagement@gmail.com";
     private static final String APP_PASSWORD="grqj xepm fjzs xabv";
 
     private static final Mailer mailer = MailerBuilder
