@@ -73,12 +73,12 @@ public class JwtService {
             return usernameMatched && notExpired && isAccessToken;
 
     }
-    public boolean isValidRefreshToken(Claims claims, UserDetails userDetails){
+    public boolean isValidRefreshToken(Claims claims){
+
         boolean notExpired = !isExpired(claims);
-        boolean usernameMatched = Objects.equals(extractUsername(claims), userDetails.getUsername());
         boolean isRefreshToken = Objects.equals(extractTokenType(claims), TokenType.REFRESH);
 
-        return usernameMatched && notExpired && isRefreshToken;
+        return  notExpired && isRefreshToken;
 
     }
     public boolean isValidToken(Claims claims, UserDetails userDetails){

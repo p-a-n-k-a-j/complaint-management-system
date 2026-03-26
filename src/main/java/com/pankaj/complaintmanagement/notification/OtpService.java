@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.notification;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
@@ -37,12 +38,16 @@ public class OtpService {
 
     //here is a verification method
     public boolean verifyOtp(String email , int otp){
-        if(Objects.equals(otp, getStoredOtp(email))){
+        int storedOtp = getStoredOtp(email);
+        if (storedOtp == 0) {
+            throw new BadCredentialsException("OTP expired or not found");
+        }
+        if(Objects.equals(otp, storedOtp)){
             cleanStoredOtp(email);
             Verify.markAsVerified(email);
            return true;
         }
-        return false;
+        throw new BadCredentialsException("Wrong otp entered");
     }
 
 

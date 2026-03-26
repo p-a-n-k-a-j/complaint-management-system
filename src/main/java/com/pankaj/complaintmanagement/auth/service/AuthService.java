@@ -3,13 +3,16 @@ package com.pankaj.complaintmanagement.auth.service;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
+import com.pankaj.complaintmanagement.exception.custom.EmailNotVerifiedException;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
 import com.pankaj.complaintmanagement.exception.custom.UsernameNotFoundException;
 import com.pankaj.complaintmanagement.notification.EmailService;
+import com.pankaj.complaintmanagement.notification.Verify;
 import com.pankaj.complaintmanagement.security.CustomUserDetails;
 import com.pankaj.complaintmanagement.security.CustomUserDetailsService;
 import com.pankaj.complaintmanagement.security.JwtService;
 import com.pankaj.complaintmanagement.util.UserRole;
+import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,18 +21,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
 public class AuthService {
     private final AuthRepository authRepository;
-    private final EmailService emailService;
+
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     @Autowired
-    public AuthService(AuthRepository authRepository, EmailService emailService, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.authRepository = authRepository;
-        this.emailService = emailService;
+
         this.passwordEncoder=passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -38,6 +42,10 @@ public class AuthService {
         User user = authRepository.findByEmail(registerRequest.getEmail());
 
         if(user !=null){throw new UserAlreadyExistsException("Username already  exists with this email");}
+       if(!Verify.isVerified(registerRequest.getEmail())){
+           throw new EmailNotVerifiedException("Email is not verified");
+       }
+
         User newUser = new User();
         newUser.setName(registerRequest.getName());
         newUser.setEmail(registerRequest.getEmail());
@@ -47,6 +55,7 @@ public class AuthService {
         newUser.setRoles(Set.of(UserRole.ROLE_USER));
         newUser.setCreatedAt(LocalDateTime.now());
         authRepository.save(newUser);
+        Verify.clearVerification(registerRequest.getEmail());
 
     }
 
@@ -60,8 +69,48 @@ public class AuthService {
             CustomUserDetails userDetails = new CustomUserDetails(user);
             String accessToken = jwtService.accessToken(userDetails);
             String refreshToken = jwtService.refreshToken(user.getEmail());
+            user.setRefreshToken(refreshToken);
+            user.setActive(true);
+            authRepository.save(user);
             return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
         }
         throw new BadCredentialsException("Invalid credentials");
+    }
+//this is for refresh both access and refresh token
+    public Map<String, String> refresh(String refreshToken) {
+        Claims claims = jwtService.extractAllClaims(refreshToken);
+
+        if(!jwtService.isValidRefreshToken(claims)){
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        String username = jwtService.extractUsername(claims);
+        User user = authRepository.findByEmail(username);
+        if(user ==null)throw new UsernameNotFoundException("username not found");
+
+
+        if(!Objects.equals(refreshToken, user.getRefreshToken())) {
+            throw new BadCredentialsException("Invalid token");
+        }
+
+            String accessToken = jwtService.accessToken(new CustomUserDetails(user));
+            String refreshedToken = jwtService.refreshToken(user.getEmail());
+            user.setRefreshToken(refreshedToken);
+            authRepository.save(user);
+            return Map.of("accessToken", accessToken, "refreshToken", refreshedToken);
+    }
+
+    public void forgotPassword(String email, String newPassword) {
+
+        User user = authRepository.findByEmail(email);
+        if(user == null) throw new UsernameNotFoundException("User not found");
+
+        if(!Verify.isVerified(email)){
+            throw new EmailNotVerifiedException("Email is not verified");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        authRepository.save(user);
+
+        Verify.clearVerification(email); // one-time use
     }
 }

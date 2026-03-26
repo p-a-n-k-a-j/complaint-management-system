@@ -4,7 +4,7 @@ public class ApiResponse <T>{
     private String message;
     private boolean success;
     private T data;
-public ApiResponse(boolean success, String message, T data){
+private ApiResponse(boolean success, String message, T data){
     this.success = success;
     this.message = message;
     this.data = data;

@@ -1,6 +1,8 @@
 package com.pankaj.complaintmanagement.auth.controller;
 
+import com.pankaj.complaintmanagement.auth.dto.ForgotPasswordRequest;
 import com.pankaj.complaintmanagement.auth.dto.LoginRequest;
+import com.pankaj.complaintmanagement.auth.dto.RefreshTokenRequest;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.service.AuthService;
 import com.pankaj.complaintmanagement.common.response.ApiResponse;
@@ -11,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -40,20 +39,29 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<?>> login(@RequestBody @Valid LoginRequest loginRequest){
         Map<String, String> accessTokenAndRefreshToken =authService.login(loginRequest.getEmail(), loginRequest.getPassword());
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse<>(true, "login is successfully done", accessTokenAndRefreshToken));
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("login is successfully done", accessTokenAndRefreshToken));
     }
     @PostMapping("/refresh")
-    public ResponseEntity<Map<String, String>> refreshToken(){
-        return null;
+    public ResponseEntity<ApiResponse<Map<String, String>>> refreshToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest){
+        Map<String, String> accessTokenAndRefreshToken = authService.refresh(refreshTokenRequest.getRefreshToken());
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Token refreshed successfully", accessTokenAndRefreshToken));
     }
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request){
         emailService.sendOtpEmail(request.get("email"));
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Otp Sent"));
 
     }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody Map<String, String> request){
         otpService.verifyOtp(request.get("email"), Integer.parseInt(request.get("otp")));
+        return ResponseEntity.ok(ApiResponse.success("email verified successfully"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody @Valid ForgotPasswordRequest passwordRequest){
+        authService.forgotPassword(passwordRequest.getEmail(), passwordRequest.getNewPassword());
+        return ResponseEntity.ok(ApiResponse.success("Password successfully updated"));
     }
 }
