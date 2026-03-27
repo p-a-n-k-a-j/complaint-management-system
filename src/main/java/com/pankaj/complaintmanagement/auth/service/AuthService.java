@@ -5,16 +5,14 @@ import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.exception.custom.EmailNotVerifiedException;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
-import com.pankaj.complaintmanagement.exception.custom.UsernameNotFoundException;
-import com.pankaj.complaintmanagement.notification.EmailService;
 import com.pankaj.complaintmanagement.notification.Verify;
 import com.pankaj.complaintmanagement.security.CustomUserDetails;
-import com.pankaj.complaintmanagement.security.CustomUserDetailsService;
 import com.pankaj.complaintmanagement.security.JwtService;
 import com.pankaj.complaintmanagement.util.UserRole;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,7 +96,7 @@ public class AuthService {
             authRepository.save(user);
             return Map.of("accessToken", accessToken, "refreshToken", refreshedToken);
     }
-
+@Transactional
     public void forgotPassword(String email, String newPassword) {
 
         User user = authRepository.findByEmail(email);
@@ -112,5 +110,11 @@ public class AuthService {
         authRepository.save(user);
 
         Verify.clearVerification(email); // one-time use
+    }
+@Transactional
+    public void logout(Long id) {
+        User user = authRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("user not found"));
+        user.setRefreshToken(null);
+
     }
 }

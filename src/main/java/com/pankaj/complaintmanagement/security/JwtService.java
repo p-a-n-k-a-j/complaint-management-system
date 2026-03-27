@@ -16,7 +16,7 @@ import java.util.Objects;
 public class JwtService {
     @Value("${jwt-secret}")
     private  String JWT_SECRET;
-    private long ACCESS_EXPIRY = DurationHelper.MINUTE.of(30);
+    private long ACCESS_EXPIRY = DurationHelper.MINUTE.of(15);
     private long REFRESH_EXPIRY = DurationHelper.DAY.of(7);
 
     private Key getPrivateKey(){

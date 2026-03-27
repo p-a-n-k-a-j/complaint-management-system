@@ -8,11 +8,13 @@ import com.pankaj.complaintmanagement.auth.service.AuthService;
 import com.pankaj.complaintmanagement.common.response.ApiResponse;
 import com.pankaj.complaintmanagement.notification.EmailService;
 import com.pankaj.complaintmanagement.notification.OtpService;
+import com.pankaj.complaintmanagement.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -21,14 +23,15 @@ import java.util.Map;
 @RequestMapping("api/auth")
 public class AuthController {
     private final AuthService authService;
-    private EmailService emailService;
-    private OtpService otpService;
+    private final EmailService emailService;
+    private final OtpService otpService;
     @Autowired
     AuthController(EmailService emailService, OtpService otpService, AuthService authService){
         this.emailService = emailService;
         this.otpService =otpService;
         this.authService = authService;
     }
+
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<?>> registerAccount(@RequestBody @Valid RegisterRequest registerRequest){
@@ -41,7 +44,13 @@ public class AuthController {
         Map<String, String> accessTokenAndRefreshToken =authService.login(loginRequest.getEmail(), loginRequest.getPassword());
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("login is successfully done", accessTokenAndRefreshToken));
     }
-    @PostMapping("/refresh")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<?>> logout(@AuthenticationPrincipal CustomUserDetails userDetails){
+        authService.logout(userDetails.getId());
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("user successfully logout"));
+    }
+
+    @PostMapping("/refresh-token")
     public ResponseEntity<ApiResponse<Map<String, String>>> refreshToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest){
         Map<String, String> accessTokenAndRefreshToken = authService.refresh(refreshTokenRequest.getRefreshToken());
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Token refreshed successfully", accessTokenAndRefreshToken));
