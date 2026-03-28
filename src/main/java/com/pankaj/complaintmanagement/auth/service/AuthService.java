@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.auth.service;
 
+import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
@@ -45,7 +46,6 @@ public class AuthService {
        }
 
         User newUser = new User();
-        newUser.setName(registerRequest.getName());
         newUser.setEmail(registerRequest.getEmail());
         newUser.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
         /***
@@ -53,6 +53,11 @@ public class AuthService {
         newUser.setRoles(Set.of(UserRole.ROLE_USER));
         newUser.setCreatedAt(LocalDateTime.now());
         authRepository.save(newUser);
+
+        UserProfile profile = new UserProfile();
+        profile.setFullName(registerRequest.getName());
+        profile.setUser(newUser);
+        userProfileRepository.save(profile);
         Verify.clearVerification(registerRequest.getEmail());
 
     }
@@ -68,7 +73,7 @@ public class AuthService {
             String accessToken = jwtService.accessToken(userDetails);
             String refreshToken = jwtService.refreshToken(user.getEmail());
             user.setRefreshToken(refreshToken);
-            user.setActive(true);
+            user.setStatus(AccountStatus.ACTIVE);
             authRepository.save(user);
             return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
         }

@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.entity;
 
+import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.persistence.*;
@@ -13,7 +14,6 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
     @Column(nullable = false, unique = true)
     private String email;
     @Column(nullable = false)
@@ -21,10 +21,17 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles;
-    private boolean isActive;
+    @Enumerated(EnumType.STRING)
+    private AccountStatus status;
     private LocalDateTime createdAt;
     private String refreshToken;
+    public AccountStatus getStatus() {
+        return status;
+    }
 
+    public void setStatus(AccountStatus status) {
+        this.status = status;
+    }
     public String getRefreshToken() {
         return refreshToken;
     }
@@ -41,13 +48,6 @@ public class User {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getEmail() {
         return email;
@@ -73,13 +73,6 @@ public class User {
         this.roles = roles;
     }
 
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
-    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
