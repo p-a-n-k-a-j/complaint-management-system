@@ -50,7 +50,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("user successfully logout"));
     }
 
-    @PostMapping("/refresh-token")
+    @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Map<String, String>>> refreshToken(@RequestBody @Valid RefreshTokenRequest refreshTokenRequest){
         Map<String, String> accessTokenAndRefreshToken = authService.refresh(refreshTokenRequest.getRefreshToken());
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Token refreshed successfully", accessTokenAndRefreshToken));

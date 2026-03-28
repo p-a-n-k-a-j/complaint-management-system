@@ -18,8 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
@@ -37,53 +35,35 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         String requestHeader = request.getHeader("Authorization");
         Claims claims = null;
         TokenType tokenType= null;
-        if(requestHeader !=null && requestHeader.startsWith("Bearer ")){
-            String token = requestHeader.substring(7);
-           claims= jwtService.extractAllClaims(token);
-           tokenType = jwtService.extractTokenType(claims);
 
-            if (claims == null || tokenType == null){
-                ErrorResponse error = new ErrorResponse.Builder().status(HttpStatus.UNAUTHORIZED)
-                        .message("Invalid token")
-                        .path(request.getRequestURI())
-                        .build();
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.getWriter().write(objectMapper.writeValueAsString(error));
-                return;
-            }
-        }
-        String requestUri = request.getRequestURI();
-
-
-
-        //step 1 check if the requestUri is refresh or token is also refresh then send ErrorResponse
-
-        boolean isRefreshEndpoint = requestUri.contains("/auth/refresh") || requestUri.contains("/refresh");
-        boolean tryingWithRefreshEndpointOrAccessToken = isRefreshEndpoint && !Objects.equals(tokenType, TokenType.ACCESS);
-        boolean tryingWithNotRefreshEndpointOrRefreshToken = !isRefreshEndpoint && Objects.equals(tokenType, TokenType.REFRESH);
-        if (tokenType != null && (tryingWithRefreshEndpointOrAccessToken || tryingWithNotRefreshEndpointOrRefreshToken)) {
-            ErrorResponse error = new ErrorResponse.Builder()
-                    .status(HttpStatus.UNAUTHORIZED)
-                            .message("Invalid token for this endpoint")
-                                    .path(requestUri)
-                                            .build();
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write(objectMapper.writeValueAsString(error));
-            return;
-        }
-
-
-        //it tells when to skip
-        Set<String> publicEndpoints = Set.of("/register", "send-otp", "verify-otp", "forgot-password"
-        , "refresh-token", "login");
-        boolean isPublic = publicEndpoints.stream().anyMatch(requestUri::contains);
-
-        if (isPublic) {
+        if (requestHeader == null || !requestHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
+
+        String token = requestHeader.substring(7);
+        try {
+            claims = jwtService.extractAllClaims(token);
+            tokenType = jwtService.extractTokenType(claims);
+        }catch (NullPointerException | IllegalArgumentException ex) {
+            sendError(response, request.getRequestURI(), "Missing token type");
+            return;
+        } catch(Exception ex){
+           sendError(response, request.getRequestURI(), "Invalid token");
+            return;
+        }
+
+        String requestUri = request.getRequestURI();
+        //here we check ager refreshEndpoint hai to token bhi refresh hai tab hi request process ho otherwise not
+        boolean isRefreshEndpoint = requestUri.contains("/auth/refresh-token");
+        if(isRefreshEndpoint && tokenType != TokenType.REFRESH){
+            sendError(response, requestUri, "Refresh Token Required");
+            return;
+        } else if (!isRefreshEndpoint && tokenType == TokenType.REFRESH) {
+            sendError(response, requestUri, "Refresh token not allowed here");
+            return;
+        }
+
 
         String username;
         CustomUserDetails customUserDetails=null;
@@ -105,5 +85,17 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
 
+    }
+
+    private void sendError(HttpServletResponse response, String path, String message) throws IOException {
+        ErrorResponse error = new ErrorResponse.Builder()
+                .status(HttpStatus.UNAUTHORIZED)
+                .message(message)
+                .path(path)
+                .build();
+
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write(objectMapper.writeValueAsString(error));
     }
 }
