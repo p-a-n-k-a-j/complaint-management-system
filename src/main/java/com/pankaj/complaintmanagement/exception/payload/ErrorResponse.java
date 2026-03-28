@@ -33,14 +33,15 @@ public class ErrorResponse {
         return path;
     }
 
-    public ErrorResponse(Builder builder) {
-        this.path = fetchCurrentPath();
+    private ErrorResponse(Builder builder) {
+        this.path = builder.path;
         this.status = builder.status;
         this.error = builder.error;
         this.message = builder.message;
         this.timestamp = LocalDateTime.now();
     }
-
+/**
+ * I never use this method because of data inconsistency or tight coupling with the web layer**/
     public String fetchCurrentPath(){
        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if(attributes != null){
@@ -49,10 +50,16 @@ public class ErrorResponse {
         return "Unknown";
     }
 
-    static class Builder{
+    public static class Builder{
         private String message;
         private int status;
         private String error;
+        private String path;
+
+        public Builder path(String path){
+            this.path = path;
+            return this;
+        }
 
         public Builder message(String message) {
             this.message = message;
