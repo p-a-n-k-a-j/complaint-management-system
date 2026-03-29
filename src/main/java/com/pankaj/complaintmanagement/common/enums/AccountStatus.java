@@ -1,4 +1,4 @@
-package com.pankaj.complaintmanagement.auth.dto;
+package com.pankaj.complaintmanagement.common.enums;
 
 public enum AccountStatus {
     ACTIVE, BLOCKED, SUSPENDED
