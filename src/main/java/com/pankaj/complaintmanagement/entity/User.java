@@ -1,11 +1,10 @@
 package com.pankaj.complaintmanagement.entity;
 
-import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
+import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 @Entity

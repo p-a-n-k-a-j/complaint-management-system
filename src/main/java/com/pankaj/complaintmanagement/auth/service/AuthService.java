@@ -1,6 +1,6 @@
 package com.pankaj.complaintmanagement.auth.service;
 
-import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
+import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
