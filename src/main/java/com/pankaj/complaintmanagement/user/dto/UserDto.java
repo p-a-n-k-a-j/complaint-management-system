@@ -1,7 +1,7 @@
 package com.pankaj.complaintmanagement.user.dto;
 
+import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.util.UserRole;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
