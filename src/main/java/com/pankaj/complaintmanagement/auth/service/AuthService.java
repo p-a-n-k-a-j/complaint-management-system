@@ -4,11 +4,13 @@ import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
+import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.EmailNotVerifiedException;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
 import com.pankaj.complaintmanagement.notification.Verify;
 import com.pankaj.complaintmanagement.security.CustomUserDetails;
 import com.pankaj.complaintmanagement.security.JwtService;
+import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import com.pankaj.complaintmanagement.util.UserRole;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +31,12 @@ public class AuthService {
 
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    @Autowired
-    public AuthService(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
-        this.authRepository = authRepository;
+    private final UserProfileRepository userProfileRepository;
 
+    @Autowired
+    public AuthService(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService, UserProfileRepository userProfileRepository) {
+        this.authRepository = authRepository;
+        this.userProfileRepository = userProfileRepository;
         this.passwordEncoder=passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -67,6 +71,9 @@ public class AuthService {
         User user = authRepository.findByEmail(email);
         if(user ==null){
             throw new UsernameNotFoundException("Username not found");
+        }
+        if(user.getStatus() != AccountStatus.ACTIVE){
+            throw new BadCredentialsException("Account is not Active or inactive");
         }
         if(passwordEncoder.matches(rawPassword, user.getPassword())){
             CustomUserDetails userDetails = new CustomUserDetails(user);
