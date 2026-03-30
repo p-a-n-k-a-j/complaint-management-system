@@ -1,8 +1,11 @@
 package com.pankaj.complaintmanagement.user.repository;
 
+import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface UserProfileRepository extends JpaRepository<UserProfile, Long> {
-    UserProfile findByUserId(Long userId);
+    Optional<UserProfile> findByUser(User user);
 }
