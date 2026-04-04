@@ -8,7 +8,7 @@ public class UpdateProfileRequest {
     private String city;
     private String state;
     private String pincode;
-    private String imageUrl;
+    private String imageName;
     private String bio;
 
     public String getName() {
@@ -59,12 +59,12 @@ public class UpdateProfileRequest {
         this.pincode = pincode;
     }
 
-    public String getImageUrl() {
-        return imageUrl;
+    public String getImageName() {
+        return imageName;
     }
 
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
+    public void setImageName(String imageName) {
+        this.imageName = imageName;
     }
 
     public String getBio() {

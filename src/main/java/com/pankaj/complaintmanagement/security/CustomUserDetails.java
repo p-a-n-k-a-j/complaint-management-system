@@ -11,7 +11,12 @@ import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
         private final User user;
-        public CustomUserDetails(User user){
+
+    public User getUser() {
+        return user;
+    }
+
+    public CustomUserDetails(User user){
             this.user = user;
         }
     @Override
@@ -28,9 +33,6 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public String getUsername() {
         return user.getEmail();
-    }
-    public String getRealName(){
-            return user.getName();
     }
     public LocalDateTime getCreatedAt(){
             return user.getCreatedAt();

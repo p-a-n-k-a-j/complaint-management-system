@@ -1,7 +1,7 @@
 package com.pankaj.complaintmanagement.entity;
 
-import com.pankaj.complaintmanagement.auth.dto.AccountStatus;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
+import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.persistence.*;
 
