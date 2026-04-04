@@ -55,7 +55,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
         String requestUri = request.getRequestURI();
         //here we check ager refreshEndpoint hai to token bhi refresh hai tab hi request process ho otherwise not
-        boolean isRefreshEndpoint = requestUri.contains("/auth/refresh-token");
+        boolean isRefreshEndpoint = requestUri.contains("/auth/refresh");
         if(isRefreshEndpoint && tokenType != TokenType.REFRESH){
             sendError(response, requestUri, "Refresh Token Required");
             return;
