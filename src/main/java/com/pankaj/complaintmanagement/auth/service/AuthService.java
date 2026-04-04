@@ -56,6 +56,7 @@ public class AuthService {
          * user role default hoga. or isse baad me sirf super admin change kar sakta hai, vo hi admin bna sakta hai*/
         newUser.setRoles(Set.of(UserRole.ROLE_USER));
         newUser.setCreatedAt(LocalDateTime.now());
+        newUser.setStatus(AccountStatus.ACTIVE);
         authRepository.save(newUser);
 
         UserProfile profile = new UserProfile();
@@ -80,7 +81,6 @@ public class AuthService {
             String accessToken = jwtService.accessToken(userDetails);
             String refreshToken = jwtService.refreshToken(user.getEmail());
             user.setRefreshToken(refreshToken);
-            user.setStatus(AccountStatus.ACTIVE);
             authRepository.save(user);
             return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
         }
