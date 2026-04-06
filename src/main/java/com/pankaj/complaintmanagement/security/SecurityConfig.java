@@ -46,8 +46,11 @@ public class SecurityConfig {
                                 "/api/auth/refresh",
                                 "/api/auth/send-otp",
                                 "/api/auth/verify-otp",
-                                "/api/auth/forgot-password"
+                                "/api/auth/forgot-password",
+                                "/images/**",
+                                "/error"
                         ).permitAll()
+                                .requestMatchers("/upload/image").authenticated()
                         .anyRequest().authenticated());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling(ex -> ex.authenticationEntryPoint(customEntryPoint));

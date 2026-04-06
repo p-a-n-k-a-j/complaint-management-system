@@ -1,6 +1,7 @@
 package com.pankaj.complaintmanagement.user.service;
 
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
+import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
@@ -10,7 +11,7 @@ import com.pankaj.complaintmanagement.user.dto.UserDto;
 import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +32,8 @@ public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
     private final AuthRepository authRepository;
-
+    @Value("${project.image.path}")
+    private String folder;
     @Autowired
     public UserProfileService(AuthRepository authRepository, UserProfileRepository userProfileRepository){
        this.authRepository = authRepository;
@@ -69,6 +71,7 @@ public class UserProfileService {
                 .status(user.getStatus())
                 .imageUrl((userProfile.getImageName() !=null && !userProfile.getImageName().isBlank())? getImageUrl(userProfile.getImageName()): null)
                 .bio(userProfile.getBio())
+                .pinCode(userProfile.getPinCode())
                 .build();
 
 
@@ -82,15 +85,20 @@ public class UserProfileService {
         if(profileRequest.getImageName() != null && !profileRequest.getImageName().isBlank())userProfile.setImageName(profileRequest.getImageName());
         userProfile.setLastUpdate(LocalDateTime.now());
         if(profileRequest.getPhone() !=null )userProfile.setPhone(profileRequest.getPhone());
-        if(profileRequest.getPincode() != null)userProfile.setPincode(profileRequest.getPincode());
+        if(profileRequest.getPinCode() != 0)userProfile.setPinCode(profileRequest.getPinCode());
         if(profileRequest.getState() != null)userProfile.setState(profileRequest.getState());
         if(profileRequest.getBio() != null)userProfile.setBio(profileRequest.getBio());
     }
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+
     @Transactional
     public void deleteUserProfile(Long id) {
         User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("user not found"));
+        user.setStatus(AccountStatus.DELETED);
+
         UserProfile userProfile =userProfileRepository.findByUser(user).orElseThrow(() -> new UserProfileNotFoundException("UserProfile not found"));
+        String path = System.getProperty("user.dir")+ File.separator + folder + File.separator +userProfile.getImageName();
+        File old = new File(path);
+        if(old.exists())old.delete();
         userProfileRepository.delete(userProfile);
     }
     @Transactional

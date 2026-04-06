@@ -16,12 +16,13 @@ public class UserProfile {
         private User user;
 
         private String fullName;
-        private String phone;
+        private Long phone;
         private String address;
         private String city;
         private String state;
-        private String pincode;
+        private int pinCode;
         private String imageName;
+        @Column(columnDefinition = "TEXT" )
         private String bio;
 
         private LocalDateTime lastUpdate;
@@ -50,11 +51,11 @@ public class UserProfile {
         this.fullName = fullName;
     }
 
-    public String getPhone() {
+    public Long getPhone() {
         return phone;
     }
 
-    public void setPhone(String phone) {
+    public void setPhone(Long phone) {
         this.phone = phone;
     }
 
@@ -82,12 +83,12 @@ public class UserProfile {
         this.state = state;
     }
 
-    public String getPincode() {
-        return pincode;
+    public int getPinCode() {
+        return pinCode;
     }
 
-    public void setPincode(String pincode) {
-        this.pincode = pincode;
+    public void setPinCode(int pinCode) {
+        this.pinCode = pinCode;
     }
 
     public String getImageName() {

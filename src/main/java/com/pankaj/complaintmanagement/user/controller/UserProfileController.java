@@ -16,7 +16,7 @@ import java.io.File;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/user-profile")
+@RequestMapping("/api/user-profile")
 public class UserProfileController {
     @Value("${project.image.path}")
     private String folder;
@@ -31,7 +31,7 @@ public class UserProfileController {
         return ResponseEntity.ok(ApiResponse.success("successfully found user data", userDto));
     }
 
-    @GetMapping("/getAll")
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<List<UserDto>>> getAllUser(@AuthenticationPrincipal CustomUserDetails userDetails){
         List<UserDto> allUserProfile =userProfileService.getAllUser();
         return ResponseEntity.ok(ApiResponse.success("successfully found user data", allUserProfile));
@@ -47,19 +47,24 @@ public class UserProfileController {
         userProfileService.deleteUserProfile(userId);
         return ResponseEntity.ok(ApiResponse.success("UserProfile deleted Successfully"));
     }
+    @DeleteMapping
+    public ResponseEntity<?> deleteCurrentUserProfile(@AuthenticationPrincipal CustomUserDetails userDetails){
+        userProfileService.deleteUserProfile(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("UserProfile deleted Successfully"));
+    }
 
-    @PatchMapping("upload/image")
-    public ResponseEntity<?> setImage(@RequestParam("image")MultipartFile file ,@AuthenticationPrincipal CustomUserDetails userDetails){
+    @PatchMapping("/image")
+    public ResponseEntity<?> setImage(@RequestParam("image")MultipartFile image ,@AuthenticationPrincipal CustomUserDetails userDetails){
         String path = System.getProperty("user.dir") + File.separator + folder;
-        String imageUrl=userProfileService.setImageUrl(file, path, userDetails.getUser());
+        String imageUrl=userProfileService.setImageUrl(image, path, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Image Successfully updated",imageUrl));
     }
-    @GetMapping("/profile/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UserDto>> getUserProfileById(@PathVariable Long id){
       UserDto userDto =  userProfileService.getUserProfileById(id);
       return ResponseEntity.ok(ApiResponse.success("user found!", userDto));
     }
-    @DeleteMapping("/profile/image")
+    @DeleteMapping("/image")
     public ResponseEntity<ApiResponse<?>> removeProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails){
         userProfileService.removeProfileImage(userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Profile Image Successfully removed!"));

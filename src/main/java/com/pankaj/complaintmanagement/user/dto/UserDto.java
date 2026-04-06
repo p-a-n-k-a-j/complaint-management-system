@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.validation.constraints.NotBlank;
@@ -21,15 +22,16 @@ public class UserDto {
     private Set<UserRole> roles;
     @NotNull(message = "Account Status can't be null")
     private AccountStatus status;
-
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
     private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
     private final LocalDateTime updatedAt;
     @NotBlank(message = "phone number is required")
-    private String phone;
+    private Long phone;
     private String address;
     private String city;
     private String state;
-    private String pincode;
+    private int pinCode;
     private String imageUrl;
     private String bio;
 
@@ -44,7 +46,7 @@ public class UserDto {
         this.address = builder.address;
         this.city = builder.city;
         this.state = builder.state;
-        this.pincode = builder.pincode;
+        this.pinCode = builder.pinCode;
         this.imageUrl = builder.imageUrl;
         this.bio = builder.bio;
         this.updatedAt = builder.updatedAt;
@@ -78,7 +80,7 @@ public class UserDto {
         return updatedAt;
     }
 
-    public  String getPhone() {
+    public  Long getPhone() {
         return phone;
     }
 
@@ -94,8 +96,8 @@ public class UserDto {
         return state;
     }
 
-    public String getPincode() {
-        return pincode;
+    public int getPinCode() {
+        return pinCode;
     }
 
     public String getImageUrl() {
@@ -113,11 +115,11 @@ public class UserDto {
         private Set<UserRole> roles;
         private AccountStatus status;
         private LocalDateTime createdAt;
-        private String phone;
+        private Long phone;
         private String address;
         private String city;
         private String state;
-        private String pincode;
+        private int pinCode;
         private String imageUrl;
         private String bio;
         private LocalDateTime updatedAt;
@@ -155,7 +157,7 @@ public class UserDto {
             return this;
         }
 
-        public Builder phone(String phone) {
+        public Builder phone(Long phone) {
             this.phone = phone;
             return this;
         }
@@ -175,8 +177,8 @@ public class UserDto {
             return this;
         }
 
-        public Builder pincode(String pincode) {
-            this.pincode = pincode;
+        public Builder pinCode(int pinCode) {
+            this.pinCode = pinCode;
             return this;
         }
 
