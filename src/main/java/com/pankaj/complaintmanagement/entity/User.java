@@ -1,11 +1,13 @@
 package com.pankaj.complaintmanagement.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 @Entity
 
@@ -24,6 +26,18 @@ public class User {
     private AccountStatus status;
     private LocalDateTime createdAt;
     private String refreshToken;
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties
+    private List<Complaint> complaints;
+
+    public List<Complaint> getComplaints() {
+        return complaints;
+    }
+
+    public void setComplaints(List<Complaint> complaints) {
+        this.complaints = complaints;
+    }
+
     public AccountStatus getStatus() {
         return status;
     }
