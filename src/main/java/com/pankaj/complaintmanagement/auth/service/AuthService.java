@@ -6,7 +6,9 @@ import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.EmailNotVerifiedException;
+import com.pankaj.complaintmanagement.exception.custom.UnauthorizedActionException;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
+import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
 import com.pankaj.complaintmanagement.notification.Verify;
 import com.pankaj.complaintmanagement.security.CustomUserDetails;
 import com.pankaj.complaintmanagement.security.JwtService;
@@ -14,6 +16,7 @@ import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import com.pankaj.complaintmanagement.util.UserRole;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -44,8 +48,19 @@ public class AuthService {
     public void register(RegisterRequest registerRequest){
         User user = authRepository.findByEmail(registerRequest.getEmail());
 
-        if(user !=null){throw new UserAlreadyExistsException("Username already  exists with this email");}
-       if(!Verify.isVerified(registerRequest.getEmail())){
+        if (user != null) {
+            if (user.getStatus() == AccountStatus.ACTIVE) {
+                throw new UserAlreadyExistsException("Email already in use!");
+            }
+            if (user.getStatus() == AccountStatus.DELETED) {
+                updateExistingUserWithNewData(user, registerRequest);
+                return;
+            }
+            // Agar BLOCKED ya SUSPENDED hai
+            throw new RuntimeException("Account is " + user.getStatus() + ". Contact admin.");
+        }
+
+        if(!Verify.isVerified(registerRequest.getEmail())){
            throw new EmailNotVerifiedException("Email is not verified");
        }
 
@@ -67,25 +82,49 @@ public class AuthService {
 
     }
 
-    public Map<String, String> login(String email, String rawPassword) {
-
-        User user = authRepository.findByEmail(email);
-        if(user ==null){
-            throw new UsernameNotFoundException("Username not found");
-        }
-        if(user.getStatus() != AccountStatus.ACTIVE){
-            throw new BadCredentialsException("Account is not Active or inactive");
-        }
-        if(passwordEncoder.matches(rawPassword, user.getPassword())){
-            CustomUserDetails userDetails = new CustomUserDetails(user);
-            String accessToken = jwtService.accessToken(userDetails);
-            String refreshToken = jwtService.refreshToken(user.getEmail());
-            user.setRefreshToken(refreshToken);
-            authRepository.save(user);
-            return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
-        }
-        throw new BadCredentialsException("Invalid credentials");
+    private void updateExistingUserWithNewData(User user, RegisterRequest registerRequest) {
+        user.setStatus(AccountStatus.ACTIVE);
+        user.setRoles(Set.of(UserRole.ROLE_USER));
+        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        UserProfile userProfile=new UserProfile();
+        userProfile.setUser(user);
+        userProfile.setFullName(registerRequest.getName());
+        userProfileRepository.save(userProfile);
     }
+
+    public Map<String, String> login(String email, String rawPassword) {
+        User user = authRepository.findByEmail(email);
+
+        // Status checks pehle (ye sahi hai)
+        if (user == null) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+
+        if (user.getStatus() == AccountStatus.DELETED) {
+            throw new RuntimeException("Account is deleted.");
+        }
+
+        if (user.getStatus() != AccountStatus.ACTIVE) {
+            throw new BadCredentialsException("Account is " + user.getStatus());
+        }
+
+        // Password check
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new BadCredentialsException("Invalid email or password");
+        }
+
+        // Tokens generate aur save karna
+        CustomUserDetails userDetails = new CustomUserDetails(user);
+        String accessToken = jwtService.accessToken(userDetails);
+        String refreshToken = jwtService.refreshToken(user.getEmail());
+
+        user.setRefreshToken(refreshToken);
+        authRepository.save(user); // Ye step zaroori hai
+
+        return Map.of("accessToken", accessToken, "refreshToken", refreshToken);
+    }
+
 //this is for refresh both access and refresh token
     public Map<String, String> refresh(String refreshToken) {
         Claims claims = jwtService.extractAllClaims(refreshToken);
@@ -128,5 +167,14 @@ public class AuthService {
         User user = authRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("user not found"));
         user.setRefreshToken(null);
 
+    }
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Transactional
+    public void changeStatus(Long targetId, AccountStatus accountStatus, Long currentUserId ) {
+        User user = authRepository.findById(targetId).orElseThrow(()-> new UserNotFoundException("User not found"));
+       if(currentUserId.equals(targetId)){
+           throw new UnauthorizedActionException("you can't change your status by itself.");
+       }
+        user.setStatus(accountStatus);
     }
 }

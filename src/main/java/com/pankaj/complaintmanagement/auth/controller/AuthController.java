@@ -1,10 +1,8 @@
 package com.pankaj.complaintmanagement.auth.controller;
 
-import com.pankaj.complaintmanagement.auth.dto.ForgotPasswordRequest;
-import com.pankaj.complaintmanagement.auth.dto.LoginRequest;
-import com.pankaj.complaintmanagement.auth.dto.RefreshTokenRequest;
-import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
+import com.pankaj.complaintmanagement.auth.dto.*;
 import com.pankaj.complaintmanagement.auth.service.AuthService;
+import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.common.response.ApiResponse;
 import com.pankaj.complaintmanagement.notification.EmailService;
 import com.pankaj.complaintmanagement.notification.OtpService;
@@ -73,4 +71,11 @@ public class AuthController {
         authService.forgotPassword(passwordRequest.getEmail(), passwordRequest.getNewPassword());
         return ResponseEntity.ok(ApiResponse.success("Password successfully updated"));
     }
+
+    @PatchMapping("/{status}/{id}")
+    public ResponseEntity<?> changeUserStatus(@PathVariable AccountStatus status, @PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
+        authService.changeStatus(id, status, userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("User accountStatus successfully updated"));
+    }
+
 }
