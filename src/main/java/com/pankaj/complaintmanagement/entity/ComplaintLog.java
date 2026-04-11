@@ -1,7 +1,6 @@
 package com.pankaj.complaintmanagement.entity;
 
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
-import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -13,14 +12,13 @@ public class ComplaintLog {
     @ManyToOne
     @JoinColumn(name = "complaint_id")
     private Complaint complaint;
+    @Column(unique = true, nullable = false)
     private String ticketId;
     @Enumerated(EnumType.STRING)
     private ComplaintStatus complaintStatus;
     @Column(columnDefinition = "TEXT")
     private String remark;
     private LocalDateTime logTime;
-    @Enumerated(EnumType.STRING)
-    private ComplaintCategory category;
     private String actionBy;
 
     public Long getId() {
@@ -69,14 +67,6 @@ public class ComplaintLog {
 
     public void setLogTime(LocalDateTime logTime) {
         this.logTime = logTime;
-    }
-
-    public ComplaintCategory getCategory() {
-        return category;
-    }
-
-    public void setCategory(ComplaintCategory category) {
-        this.category = category;
     }
 
     public String getActionBy() {

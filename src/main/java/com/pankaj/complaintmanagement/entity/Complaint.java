@@ -2,6 +2,7 @@ package com.pankaj.complaintmanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
+import com.pankaj.complaintmanagement.common.enums.Priority;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import jakarta.persistence.*;
 
@@ -18,14 +19,15 @@ public class Complaint {
     @Column(unique = true, nullable = false)
     private String ticketId; // Unique Ticket Number
 
-    private String complaintTitle;
+    private String title;
 
     @Column(columnDefinition = "TEXT")
-    private String complaintDescription;
+    private String description;
 
     @Enumerated(EnumType.STRING)
-    private ComplaintStatus complaintStatus;
-
+    private ComplaintStatus previousStatus;
+    @Enumerated(EnumType.STRING)
+    private ComplaintStatus newStatus;
     // Kisine toh complaint ki hogi!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -44,7 +46,63 @@ public class Complaint {
     @Enumerated(EnumType.STRING)
     private ComplaintCategory category;
 
+    @Enumerated(EnumType.STRING)
+    private Priority priority; // optional
+    private LocalDateTime resolvedAt; // Analytics ke liye (optional)
+    @ManyToOne
+    @JoinColumn(name = "assigned_to_id")
+    private User assignedTo;
+    @OneToMany(mappedBy = "complaint", fetch = FetchType.LAZY)
+    @JsonIgnoreProperties
+    private List<ComplaintAttachment> complaintAttachment;
 
+
+    public ComplaintStatus getNewStatus() {
+        return newStatus;
+    }
+
+    public void setNewStatus(ComplaintStatus newStatus) {
+        this.newStatus = newStatus;
+    }
+
+    public User getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(User assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public List<ComplaintAttachment> getComplaintAttachment() {
+        return complaintAttachment;
+    }
+
+    public void setComplaintAttachment(List<ComplaintAttachment> complaintAttachment) {
+        this.complaintAttachment = complaintAttachment;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
+    }
+
+    public List<ComplaintAttachment> getAttachment() {
+        return complaintAttachment;
+    }
+
+    public void setAttachment(List<ComplaintAttachment> complaintAttachment) {
+        this.complaintAttachment = complaintAttachment;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
 
     public ComplaintCategory getCategory() {
         return category;
@@ -70,28 +128,28 @@ public class Complaint {
         this.ticketId = ticketId;
     }
 
-    public String getComplaintTitle() {
-        return complaintTitle;
+    public String getTitle() {
+        return title;
     }
 
-    public void setComplaintTitle(String complaintTitle) {
-        this.complaintTitle = complaintTitle;
+    public void setTitle(String title) {
+        this.title = title;
     }
 
-    public String getComplaintDescription() {
-        return complaintDescription;
+    public String getDescription() {
+        return description;
     }
 
-    public void setComplaintDescription(String complaintDescription) {
-        this.complaintDescription = complaintDescription;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public ComplaintStatus getComplaintStatus() {
-        return complaintStatus;
+    public ComplaintStatus getPreviousStatus() {
+        return previousStatus;
     }
 
-    public void setComplaintStatus(ComplaintStatus complaintStatus) {
-        this.complaintStatus = complaintStatus;
+    public void setPreviousStatus(ComplaintStatus previousStatus) {
+        this.previousStatus = previousStatus;
     }
 
     public User getUser() {
