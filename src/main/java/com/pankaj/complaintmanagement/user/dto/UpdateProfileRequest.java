@@ -1,5 +1,7 @@
 package com.pankaj.complaintmanagement.user.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 public class UpdateProfileRequest {
 
     private String name;
@@ -8,8 +10,16 @@ public class UpdateProfileRequest {
     private String city;
     private String state;
     private int pinCode;
-    private String imageName;
+    private MultipartFile image;
     private String bio;
+
+    public MultipartFile getImage() {
+        return image;
+    }
+
+    public void setImage(MultipartFile image) {
+        this.image = image;
+    }
 
     public String getName() {
         return name;
@@ -59,13 +69,7 @@ public class UpdateProfileRequest {
         this.pinCode = pinCode;
     }
 
-    public String getImageName() {
-        return imageName;
-    }
 
-    public void setImageName(String imageName) {
-        this.imageName = imageName;
-    }
 
     public String getBio() {
         return bio;

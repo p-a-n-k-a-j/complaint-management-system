@@ -2,6 +2,7 @@ package com.pankaj.complaintmanagement.user.service;
 
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
+import com.pankaj.complaintmanagement.common.services.CloudinaryService;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
@@ -11,33 +12,28 @@ import com.pankaj.complaintmanagement.user.dto.UserDto;
 import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 @Service
 public class UserProfileService {
 
     private final UserProfileRepository userProfileRepository;
     private final AuthRepository authRepository;
-    @Value("${project.image.path}")
-    private String folder;
+    private final CloudinaryService cloudinaryService;
     @Autowired
-    public UserProfileService(AuthRepository authRepository, UserProfileRepository userProfileRepository){
+    public UserProfileService(AuthRepository authRepository, UserProfileRepository userProfileRepository, CloudinaryService cloudinaryService){
        this.authRepository = authRepository;
         this.userProfileRepository = userProfileRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     public UserDto getUser(Long id) {
@@ -69,8 +65,9 @@ public class UserProfileService {
                 .updatedAt(userProfile.getLastUpdate())
                 .state(userProfile.getState())
                 .status(user.getStatus())
-                .imageUrl((userProfile.getImageName() !=null && !userProfile.getImageName().isBlank())? getImageUrl(userProfile.getImageName()): null)
+                .imageUrl((userProfile.getImageUrl() !=null && !userProfile.getImageUrl().isBlank())? userProfile.getImageUrl(): null)
                 .bio(userProfile.getBio())
+                .publicId(userProfile.getPublicId())
                 .pinCode(userProfile.getPinCode())
                 .build();
 
@@ -82,7 +79,9 @@ public class UserProfileService {
         if(profileRequest.getName() !=null)userProfile.setFullName(profileRequest.getName());
         if(profileRequest.getCity()!=null) userProfile.setCity(profileRequest.getCity());
         if(profileRequest.getAddress() !=null)userProfile.setAddress(profileRequest.getAddress());
-        if(profileRequest.getImageName() != null && !profileRequest.getImageName().isBlank())userProfile.setImageName(profileRequest.getImageName());
+        if(profileRequest.getImage() != null && !profileRequest.getImage().isEmpty()){
+            setImageUrl(profileRequest.getImage(), user);
+        }
         userProfile.setLastUpdate(LocalDateTime.now());
         if(profileRequest.getPhone() !=null )userProfile.setPhone(profileRequest.getPhone());
         if(profileRequest.getPinCode() != 0)userProfile.setPinCode(profileRequest.getPinCode());
@@ -90,17 +89,52 @@ public class UserProfileService {
         if(profileRequest.getBio() != null)userProfile.setBio(profileRequest.getBio());
     }
 
+    public String setImageUrl(MultipartFile file,User user){
+        UserProfile userProfile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("user profile not found"));
+        Map upload = cloudinaryService.upload(file);
+       String url= upload.get("secure_url").toString();
+        userProfile.setImageUrl(url);
+        userProfile.setPublicId(upload.get("public_id").toString());
+        return url;
+    }
+
+
+/*    private String getImageUrl(String imageName){
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/images/")
+                .path(imageName)
+                .toUriString();
+    }*/
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
+    public UserDto getUserProfileById(Long id) {
+        User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found!"));
+        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("user profile not found!"));
+        return this.mapUserTOUserDto(user, profile);
+    }
+
     @Transactional
-    public void deleteUserProfile(Long id) {
+    public void removeProfileImage(User  user) {
+        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("User Profile not found!"));
+        String publicId = profile.getPublicId();
+        cloudinaryService.delete(publicId);
+        profile.setImageUrl(null);
+        profile.setPublicId(null);
+
+    }
+
+   @Transactional
+    public void deleteUserProfile(Long id)  {
         User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("user not found"));
         user.setStatus(AccountStatus.DELETED);
 
         UserProfile userProfile =userProfileRepository.findByUser(user).orElseThrow(() -> new UserProfileNotFoundException("UserProfile not found"));
-        String path = System.getProperty("user.dir")+ File.separator + folder + File.separator +userProfile.getImageName();
-        File old = new File(path);
-        if(old.exists())old.delete();
-        userProfileRepository.delete(userProfile);
+       if(userProfile.getPublicId() != null && userProfile.getPublicId().isBlank()){
+           cloudinaryService.delete(userProfile.getPublicId());
+       }
+       userProfileRepository.delete(userProfile);
     }
+    //todo: these method are designed for folder storage now I don't need at all, because we sift to cloud
+       /*
     @Transactional
     public String setImageUrl(MultipartFile file, String path, User user) {
         if(file.isEmpty()) throw new RuntimeException("File is empty");
@@ -142,25 +176,5 @@ public class UserProfileService {
 
         return getImageUrl(fileRandomName);
 
-    }
-
-    private String getImageUrl(String imageName){
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/images/")
-                .path(imageName)
-                .toUriString();
-    }
-    @RolesAllowed({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
-    public UserDto getUserProfileById(Long id) {
-        User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found!"));
-        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("user profile not found!"));
-        return mapUserTOUserDto(user, profile);
-    }
-
-    @Transactional
-    public void removeProfileImage(User  user) {
-        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("User Profile not found!"));
-        profile.setImageName(null);
-
-    }
+    }*/
 }

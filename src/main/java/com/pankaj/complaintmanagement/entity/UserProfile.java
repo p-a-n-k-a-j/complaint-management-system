@@ -21,11 +21,21 @@ public class UserProfile {
         private String city;
         private String state;
         private int pinCode;
-        private String imageName;
+        private String imageUrl;
         @Column(columnDefinition = "TEXT" )
         private String bio;
-
+        private String publicId;
         private LocalDateTime lastUpdate;
+
+    public String getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(String publicId) {
+        this.publicId = publicId;
+    }
+
+
 
     public Long getId() {
         return id;
@@ -91,12 +101,12 @@ public class UserProfile {
         this.pinCode = pinCode;
     }
 
-    public String getImageName() {
-        return imageName;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setImageName(String imageName) {
-        this.imageName = imageName;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getBio() {

@@ -34,6 +34,9 @@ public class UserDto {
     private int pinCode;
     private String imageUrl;
     private String bio;
+    private String publicId;
+
+
 
     private UserDto(Builder builder){
         this.id = builder.id;
@@ -50,8 +53,11 @@ public class UserDto {
         this.imageUrl = builder.imageUrl;
         this.bio = builder.bio;
         this.updatedAt = builder.updatedAt;
+        this.publicId = builder.publicId;
     }
-
+    public String getPublicId() {
+        return publicId;
+    }
     public  Long getId() {
         return id;
     }
@@ -122,6 +128,7 @@ public class UserDto {
         private int pinCode;
         private String imageUrl;
         private String bio;
+        private String publicId;
         private LocalDateTime updatedAt;
         public Builder updatedAt(LocalDateTime updatedAt){
             this.updatedAt = updatedAt;
@@ -193,6 +200,11 @@ public class UserDto {
         }
         public UserDto build(){
             return new UserDto(this);
+        }
+
+        public Builder publicId(String publicId) {
+            this.publicId = publicId;
+            return this;
         }
     }
 }

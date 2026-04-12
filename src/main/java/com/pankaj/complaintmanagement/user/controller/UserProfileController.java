@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -55,8 +56,7 @@ public class UserProfileController {
 
     @PatchMapping("/image")
     public ResponseEntity<?> setImage(@RequestParam("image")MultipartFile image ,@AuthenticationPrincipal CustomUserDetails userDetails){
-        String path = System.getProperty("user.dir") + File.separator + folder;
-        String imageUrl=userProfileService.setImageUrl(image, path, userDetails.getUser());
+        String imageUrl=userProfileService.setImageUrl(image, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Image Successfully updated",imageUrl));
     }
     @GetMapping("/{id}")
@@ -65,7 +65,7 @@ public class UserProfileController {
       return ResponseEntity.ok(ApiResponse.success("user found!", userDto));
     }
     @DeleteMapping("/image")
-    public ResponseEntity<ApiResponse<?>> removeProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<ApiResponse<?>> removeProfileImage(@AuthenticationPrincipal CustomUserDetails userDetails) {
         userProfileService.removeProfileImage(userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Profile Image Successfully removed!"));
     }

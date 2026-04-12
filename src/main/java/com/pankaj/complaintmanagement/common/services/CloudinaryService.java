@@ -15,16 +15,26 @@ public class CloudinaryService {
         this.cloudinary = cloudinary;
     }
 //common upload method
-    public Map upload(MultipartFile file) throws IOException {
-        return cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+    public Map upload(MultipartFile file){
+        try {
+            return cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+        }catch (IOException e){
+        //ise mene checked se unchecked me convert kar liye taki throw nhi karna pade or global handler handle kar le
+        throw new RuntimeException(" Cloudinary upload file failed. ");
+    }
     }
 
     //common delete method
-    public Map delete(String publicId) throws IOException {
-        return cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+    public Map delete(String publicId) {
+        try {
+            return cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+        }catch (IOException e){
+            //ise mene checked se unchecked me convert kar liye taki throw nhi karna pade or global handler handle kar le
+            throw new RuntimeException(" Cloudinary deletion failed for publicIc "+ publicId);
+        }
     }
 
-    public Map updateFile(String publicId, MultipartFile file) throws IOException {
+    public Map updateFile(String publicId, MultipartFile file) {
       //trying to delete an old file
         if(publicId != null && !publicId.isEmpty()){
           this.delete(publicId);
