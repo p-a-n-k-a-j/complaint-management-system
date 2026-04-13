@@ -1,9 +1,18 @@
-# Default ignored files
-/shelf/
-/.idea/workspace.xml
-/uploads/
-# Ignore local properties
+# --- My Custom Ignores ---
 src/main/resources/application.properties
+/uploads/
+
+# --- IntelliJ IDEA ---
 .idea/
+*.iws
+*.iml
+*.ipr
+/out/
 HELP.md
+# --- Build & Logs ---
 target/
+*.log
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
