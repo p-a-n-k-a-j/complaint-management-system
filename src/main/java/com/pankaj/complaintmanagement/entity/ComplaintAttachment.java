@@ -2,7 +2,6 @@ package com.pankaj.complaintmanagement.entity;
 
 import jakarta.persistence.*;
 
-import java.util.List;
 @Entity
 public class ComplaintAttachment {
     @Id
@@ -10,7 +9,7 @@ public class ComplaintAttachment {
     private Long id;
     @ManyToOne
     private Complaint complaint;
-    private List<String> attachmentUrls; // Agar files hain toh
+    private String attachmentUrls; // Agar files hain toh
     private String publicId;
 
     public Long getId() {
@@ -25,15 +24,15 @@ public class ComplaintAttachment {
         return complaint;
     }
 
-    public void setComplaintId(Complaint complaint) {
+    public void setComplaint(Complaint complaint) {
         this.complaint = complaint;
     }
 
-    public List<String> getAttachmentUrls() {
+    public String getAttachmentUrls() {
         return attachmentUrls;
     }
 
-    public void setAttachmentUrls(List<String> attachmentUrls) {
+    public void setAttachmentUrls(String attachmentUrls) {
         this.attachmentUrls = attachmentUrls;
     }
 

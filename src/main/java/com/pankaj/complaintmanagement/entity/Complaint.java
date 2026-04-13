@@ -25,9 +25,7 @@ public class Complaint {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    private ComplaintStatus previousStatus;
-    @Enumerated(EnumType.STRING)
-    private ComplaintStatus newStatus;
+    private ComplaintStatus status;
     // Kisine toh complaint ki hogi!
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -52,17 +50,17 @@ public class Complaint {
     @ManyToOne
     @JoinColumn(name = "assigned_to_id")
     private User assignedTo;
-    @OneToMany(mappedBy = "complaint", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "complaint", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnoreProperties
-    private List<ComplaintAttachment> complaintAttachment;
+    private List<ComplaintAttachment> complaintAttachment = new ArrayList<>();
 
 
-    public ComplaintStatus getNewStatus() {
-        return newStatus;
+    public ComplaintStatus getStatus() {
+        return status;
     }
 
-    public void setNewStatus(ComplaintStatus newStatus) {
-        this.newStatus = newStatus;
+    public void setStatus(ComplaintStatus status) {
+        this.status = status;
     }
 
     public User getAssignedTo() {
@@ -83,14 +81,6 @@ public class Complaint {
 
     public void setPriority(Priority priority) {
         this.priority = priority;
-    }
-
-    public List<ComplaintAttachment> getAttachment() {
-        return complaintAttachment;
-    }
-
-    public void setAttachment(List<ComplaintAttachment> complaintAttachment) {
-        this.complaintAttachment = complaintAttachment;
     }
 
     public Priority getPriority() {
@@ -142,14 +132,6 @@ public class Complaint {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public ComplaintStatus getPreviousStatus() {
-        return previousStatus;
-    }
-
-    public void setPreviousStatus(ComplaintStatus previousStatus) {
-        this.previousStatus = previousStatus;
     }
 
     public User getUser() {

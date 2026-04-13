@@ -15,11 +15,29 @@ public class ComplaintLog {
     @Column(unique = true, nullable = false)
     private String ticketId;
     @Enumerated(EnumType.STRING)
-    private ComplaintStatus complaintStatus;
+    private ComplaintStatus previousStatus;
+    @Enumerated(EnumType.STRING)
+    private ComplaintStatus newStatus;
     @Column(columnDefinition = "TEXT")
     private String remark;
     private LocalDateTime logTime;
     private String actionBy;
+
+    public ComplaintStatus getPreviousStatus() {
+        return previousStatus;
+    }
+
+    public void setPreviousStatus(ComplaintStatus previousStatus) {
+        this.previousStatus = previousStatus;
+    }
+
+    public ComplaintStatus getNewStatus() {
+        return newStatus;
+    }
+
+    public void setNewStatus(ComplaintStatus newStatus) {
+        this.newStatus = newStatus;
+    }
 
     public Long getId() {
         return id;
@@ -45,13 +63,6 @@ public class ComplaintLog {
         this.ticketId = ticketId;
     }
 
-    public ComplaintStatus getComplaintStatus() {
-        return complaintStatus;
-    }
-
-    public void setComplaintStatus(ComplaintStatus complaintStatus) {
-        this.complaintStatus = complaintStatus;
-    }
 
     public String getRemark() {
         return remark;

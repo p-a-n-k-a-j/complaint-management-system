@@ -2,16 +2,14 @@ package com.pankaj.complaintmanagement.complaint.service.impl;
 
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
+import com.pankaj.complaintmanagement.common.services.CloudinaryService;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintLogDTO;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintRequest;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintLogRepository;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintRepository;
 import com.pankaj.complaintmanagement.complaint.service.ComplaintService;
-import com.pankaj.complaintmanagement.entity.Complaint;
-import com.pankaj.complaintmanagement.entity.ComplaintLog;
-import com.pankaj.complaintmanagement.entity.User;
-import com.pankaj.complaintmanagement.entity.UserProfile;
+import com.pankaj.complaintmanagement.entity.*;
 import com.pankaj.complaintmanagement.exception.custom.ComplaintNotFoundException;
 import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
 import com.pankaj.complaintmanagement.exception.custom.UserProfileNotFoundException;
@@ -25,25 +23,31 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
 @Service
 public class ComplaintServiceImpl implements ComplaintService {
    private final AuthRepository authRepository;
    private final ComplaintRepository complaintRepository;
    private final ComplaintLogRepository complaintLogRepository;
    private final UserProfileRepository userProfileRepository;
+   private final CloudinaryService cloudinaryService;
    @Autowired
-    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, UserProfileRepository userProfileRepository) {
+    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, UserProfileRepository userProfileRepository, CloudinaryService cloudinaryService) {
         this.authRepository = authRepository;
         this.complaintRepository = complaintRepository;
         this.complaintLogRepository = complaintLogRepository;
         this.userProfileRepository = userProfileRepository;
-    }
+       this.cloudinaryService = cloudinaryService;
+   }
 
     @Override
     public void createComplaint(ComplaintRequest request, User user) {
@@ -59,42 +63,37 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setDescription(request.getDescription());
         complaint.setRemark((request.getRemark() !=null )? request.getRemark():"Complaint Registered");
         complaint.setCategory(request.getCategory());
-        complaint.setPreviousStatus(ComplaintStatus.PENDING);
+        complaint.setStatus(ComplaintStatus.PENDING);
         complaint.setCreatedAt(LocalDateTime.now());
         complaint.setActionBy(profile.getFullName());
         complaint.setTicketId(ticketId);
         complaint.setUser(foundUser);
+        complaint.setPriority(request.getPriority());
 
+       setAttachment(complaint, request.getAttachments());
 
-        ComplaintLog firstLog = new ComplaintLog();
-        firstLog.setComplaintStatus(ComplaintStatus.PENDING);
-        firstLog.setComplaint(complaint);
-        firstLog.setRemark(complaint.getRemark());
-        firstLog.setTicketId(complaint.getTicketId());
-        firstLog.setActionBy(complaint.getActionBy());
-        firstLog.setLogTime(LocalDateTime.now());
-        complaint.getComplaintLogs().add(firstLog);
+        this.saveLog(complaint, null, ComplaintStatus.PENDING);
+
         complaintRepository.save(complaint);
 
     }
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Transactional
     @Override
-    public void updateComplaintStatus(Long complaintId, ComplaintStatus status, String remark, User admin) {
+    public void updateComplaintStatus(Long complaintId, ComplaintStatus newStatus, String remark, User admin) {
        User foundUser = authRepository.findById(admin.getId()).orElseThrow(()-> new UserNotFoundException("user not found"));
        UserProfile profile = userProfileRepository.findByUser(foundUser).orElseThrow(()-> new UserProfileNotFoundException("user profile not found"));
     Complaint complaint =  complaintRepository.findById(complaintId).orElseThrow(()-> new ComplaintNotFoundException("complaint not found"));
-    complaint.setPreviousStatus(status);
-    complaint.setRemark((remark != null) ? remark : "Status changed to "+ status);
+    ComplaintStatus previousStatus = complaint.getStatus();
+    complaint.setStatus(newStatus);
+    if(remark != null){
+        complaint.setRemark(remark);
+    }
+    if(newStatus == ComplaintStatus.RESOLVED){
+        complaint.setResolvedAt(LocalDateTime.now());
+    }
     complaint.setUpdatedAt(LocalDateTime.now());
-    ComplaintLog log = new ComplaintLog();
-    log.setComplaint(complaint);
-    log.setComplaintStatus(complaint.getPreviousStatus());
-    log.setTicketId(complaint.getTicketId());
-    log.setRemark(complaint.getRemark());
-    log.setActionBy(profile.getFullName());
-    log.setLogTime(LocalDateTime.now());
-    complaint.getComplaintLogs().add(log);
+    this.saveLog(complaint, previousStatus, newStatus);
     }
 
     @Override
@@ -135,6 +134,32 @@ public class ComplaintServiceImpl implements ComplaintService {
         return "CMS"+datePart+random;
     }
     private ComplaintResponseDTO mapToDto(Complaint complaint){
+return null;
+    }
 
+    private void saveLog(Complaint complaint,ComplaintStatus previousStatus, ComplaintStatus newStatus){
+        ComplaintLog log = new ComplaintLog();
+        log.setPreviousStatus(previousStatus);
+        log.setComplaint(complaint);
+        log.setRemark((complaint.getRemark() !=null)? complaint.getRemark() : previousStatus + " Status changed to "+ newStatus);
+        log.setTicketId(complaint.getTicketId());
+        log.setActionBy(complaint.getActionBy());
+        log.setLogTime(LocalDateTime.now());
+        log.setNewStatus(newStatus);
+        complaint.getComplaintLogs().add(log);
+    }
+    //this is responsible to handle all Complaint attachment
+    private List<ComplaintAttachment> setAttachment(Complaint complaint, List<MultipartFile> files){
+        if (files == null || files.isEmpty()) return new ArrayList<>();
+        List<ComplaintAttachment> attachmentList = files.stream().map(file -> {
+            Map upload = cloudinaryService.upload(file);
+            ComplaintAttachment complaintAttachment = new ComplaintAttachment();
+            complaintAttachment.setComplaint(complaint);
+            complaintAttachment.setAttachmentUrls(upload.get("secure_url").toString());
+            complaintAttachment.setPublicId(upload.get("public_id").toString());
+            return complaintAttachment;
+        }).toList();
+        complaint.getComplaintAttachment().addAll(attachmentList);
+        return attachmentList;
     }
 }
