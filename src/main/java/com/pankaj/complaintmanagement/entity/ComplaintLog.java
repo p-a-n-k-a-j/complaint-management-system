@@ -21,7 +21,8 @@ public class ComplaintLog {
     @Column(columnDefinition = "TEXT")
     private String remark;
     private LocalDateTime logTime;
-    private String actionBy;
+    @Column(name = "action_by_id")
+    private User actionBy;
 
     public ComplaintStatus getPreviousStatus() {
         return previousStatus;
@@ -80,11 +81,11 @@ public class ComplaintLog {
         this.logTime = logTime;
     }
 
-    public String getActionBy() {
+    public User getActionBy() {
         return actionBy;
     }
 
-    public void setActionBy(String actionBy) {
+    public void setActionBy(User actionBy) {
         this.actionBy = actionBy;
     }
 }

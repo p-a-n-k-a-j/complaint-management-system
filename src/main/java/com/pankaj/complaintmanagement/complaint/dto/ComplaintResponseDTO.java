@@ -2,10 +2,12 @@ package com.pankaj.complaintmanagement.complaint.dto;
 
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import com.pankaj.complaintmanagement.common.enums.Priority;
+import com.pankaj.complaintmanagement.entity.ComplaintAttachment;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ComplaintResponseDTO {
     private Long id;
@@ -18,12 +20,15 @@ public class ComplaintResponseDTO {
     private ComplaintStatus status;
     private ComplaintCategory category;
     private String updatedBy;
-    //user-details userId se fetch kar lega frontEnd
-    private Long userId;
     private Priority priority;
     private String name;   // Extra call se bachne ke liye (optional)
     private String email;
     private String imageUrl;
+    private String assignedTo;
+    private LocalDateTime resolvedAt;
+    private List<ComplaintAttachment> attachments;
+
+
     public Long getId() {
         return id;
     }
@@ -104,17 +109,66 @@ public class ComplaintResponseDTO {
         this.updatedBy = updatedBy;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Priority getPriority() {
+        return priority;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setPriority(Priority priority) {
+        this.priority = priority;
     }
-    public String getImageUrl(String imageName){
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/images/")
-                .path(imageName)
-                .toUriString();
+
+    public String getName() {
+        return name;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
+
+    public LocalDateTime getResolvedAt() {
+        return resolvedAt;
+    }
+
+    public void setResolvedAt(LocalDateTime resolvedAt) {
+        this.resolvedAt = resolvedAt;
+    }
+
+    public List<ComplaintAttachment> getAttachments() {
+        return attachments;
+    }
+
+    public void setAttachments(List<ComplaintAttachment> attachments) {
+        this.attachments = attachments;
+    }
+
+    //    public String getImageUrl(String imageName){
+//        return ServletUriComponentsBuilder.fromCurrentContextPath()
+//                .path("/images/")
+//                .path(imageName)
+//                .toUriString();
+//    }
 }

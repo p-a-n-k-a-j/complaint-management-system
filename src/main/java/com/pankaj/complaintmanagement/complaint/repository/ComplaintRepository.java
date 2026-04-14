@@ -15,8 +15,9 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     Page<Complaint> findByUser(User user, Pageable pageable);
     Page<Complaint> findAll(Pageable pageable);
-    Page<Complaint> findByComplaintStatus(ComplaintStatus status, Pageable pageable);
+    Page<Complaint> findByStatus(ComplaintStatus status, Pageable pageable);
     Page<Complaint> findByCategory(ComplaintCategory category, Pageable pageable);
-    Page<Complaint> findByComplaintStatusAndCategory(ComplaintStatus status, ComplaintCategory category, Pageable pageable);
+    Page<Complaint> findByStatusAndCategory(ComplaintStatus status, ComplaintCategory category, Pageable pageable);
 
+    Page<Complaint> findByTicketId(String ticketId, Pageable pageable);
 }

@@ -40,7 +40,8 @@ public class Complaint {
     private List<ComplaintLog> complaintLogs = new ArrayList<>();
     @Column(columnDefinition = "TEXT")
     private String remark; // Admin ka final comment
-    private String actionBy; // Admin ka naam/email jisne last change kiya
+    @Column(name = "action_by_id")
+    private User updatedBy; // Admin ka naam/email jisne last change kiya
     @Enumerated(EnumType.STRING)
     private ComplaintCategory category;
 
@@ -174,12 +175,12 @@ public class Complaint {
         this.remark = remark;
     }
 
-    public String getActionBy() {
-        return actionBy;
+    public User getUpdatedBy() {
+        return updatedBy;
     }
 
-    public void setActionBy(String actionBy) {
-        this.actionBy = actionBy;
+    public void setUpdatedBy(User updatedBy) {
+        this.updatedBy = updatedBy;
     }
 }
 

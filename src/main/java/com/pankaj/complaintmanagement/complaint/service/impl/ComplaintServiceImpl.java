@@ -3,7 +3,7 @@ package com.pankaj.complaintmanagement.complaint.service.impl;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import com.pankaj.complaintmanagement.common.services.CloudinaryService;
-import com.pankaj.complaintmanagement.complaint.dto.ComplaintLogDTO;
+import com.pankaj.complaintmanagement.complaint.dto.ComplaintLogResponseDTO;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintRequest;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintLogRepository;
@@ -11,6 +11,7 @@ import com.pankaj.complaintmanagement.complaint.repository.ComplaintRepository;
 import com.pankaj.complaintmanagement.complaint.service.ComplaintService;
 import com.pankaj.complaintmanagement.entity.*;
 import com.pankaj.complaintmanagement.exception.custom.ComplaintNotFoundException;
+import com.pankaj.complaintmanagement.exception.custom.UnauthorizedActionException;
 import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
 import com.pankaj.complaintmanagement.exception.custom.UserProfileNotFoundException;
 import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
@@ -29,9 +30,7 @@ import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ComplaintServiceImpl implements ComplaintService {
@@ -65,7 +64,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setCategory(request.getCategory());
         complaint.setStatus(ComplaintStatus.PENDING);
         complaint.setCreatedAt(LocalDateTime.now());
-        complaint.setActionBy(profile.getFullName());
+        complaint.setUpdatedBy(user);
         complaint.setTicketId(ticketId);
         complaint.setUser(foundUser);
         complaint.setPriority(request.getPriority());
@@ -97,30 +96,69 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     @Override
-    public void deleteComplaint(Long complaintId) {
-
+    public void deleteComplaint(Long complaintId, Long userId) {
+       Complaint complaint = complaintRepository.findById(complaintId).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
+       if(!Objects.equals(complaint.getUser().getId(), userId)){
+        throw new UnauthorizedActionException("This complaint is not yours");
+       }
+        if(complaint.getComplaintAttachment() != null){
+            //before deleting the complaint, delete all attachments from cloud
+            complaint.getComplaintAttachment().forEach(attachment -> cloudinaryService.delete(attachment.getPublicId()));
+        }
+        //after that, we delete the complaint entity
+        complaintRepository.delete(complaint);
     }
 
     @Override
     public Page<ComplaintResponseDTO> getMyComplaints(int page, int size, User user) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("").ascending());
+        // "createdAt" wahi naam hona chahiye jo teri Complaint entity mein hai
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
        Page<Complaint> complaintPage= complaintRepository.findByUser(user, pageable);
-        return null;
+
+       if(complaintPage==null || complaintPage.isEmpty())return Page.empty();
+
+       return complaintPage.map(this::mapToComplaintResponseDto);
     }
 
     @Override
     public Page<ComplaintResponseDTO> getAllComplaints(int page, int size, ComplaintStatus status, ComplaintCategory category) {
-        return null;
+       if(status ==null && category==null){
+           Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+           Page<Complaint> all = complaintRepository.findAll(pageable);
+           return all.map(this::mapToComplaintResponseDto);
+       }
+       else if(status !=null && category ==null){
+           Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<Complaint> byStatus = complaintRepository.findByStatus(status, pageable);
+            return byStatus.map(this::mapToComplaintResponseDto);
+        }else if(status ==null && category !=null){
+           Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+            Page<Complaint> byCategory = complaintRepository.findByCategory(category, pageable);
+            return byCategory.map(this::mapToComplaintResponseDto);
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Complaint> byStatusAndCategory = complaintRepository.findByStatusAndCategory(status, category, pageable);
+        return byStatusAndCategory.map(this::mapToComplaintResponseDto);
+    }
+    @Transactional
+    @Override
+    public Page<ComplaintLogResponseDTO> getComplaintHistory(int page, int size, Long complaintId) {
+        Complaint complaint = complaintRepository.findById(complaintId).orElseThrow(() -> new ComplaintNotFoundException("Complaint not found"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("logTime").ascending());
+        Page<ComplaintLog> complaintLog = complaintLogRepository.findAllByComplaint(complaint, pageable);
+       if(complaintLog == null || complaintLog.isEmpty()){
+           return Page.empty();
+       }
+      return complaintLog.map(this::mapToComplaintLogResponseDto);
     }
 
     @Override
-    public List<ComplaintLogDTO> getComplaintHistory(String ticketId) {
-        return List.of();
-    }
+    public Page<ComplaintResponseDTO> getComplaintByTicketId(int page, int size, String ticketId) {
+       Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+       Page<Complaint> complaints = complaintRepository.findByTicketId(ticketId, pageable);
+       if(complaints ==null || complaints.isEmpty())return Page.empty();
 
-    @Override
-    public ComplaintResponseDTO getComplaintByTicketId(String ticketId) {
-        return null;
+      return complaints.map(this::mapToComplaintResponseDto);
     }
 
     @Override
@@ -133,9 +171,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         int random = new SecureRandom().nextInt(9000)+1000;
         return "CMS"+datePart+random;
     }
-    private ComplaintResponseDTO mapToDto(Complaint complaint){
-return null;
-    }
+//    private ComplaintResponseDTO mapToDto(Complaint complaint){
+//return null;
+//    }
 
     private void saveLog(Complaint complaint,ComplaintStatus previousStatus, ComplaintStatus newStatus){
         ComplaintLog log = new ComplaintLog();
@@ -143,7 +181,7 @@ return null;
         log.setComplaint(complaint);
         log.setRemark((complaint.getRemark() !=null)? complaint.getRemark() : previousStatus + " Status changed to "+ newStatus);
         log.setTicketId(complaint.getTicketId());
-        log.setActionBy(complaint.getActionBy());
+        log.setActionBy(complaint.getUpdatedBy());
         log.setLogTime(LocalDateTime.now());
         log.setNewStatus(newStatus);
         complaint.getComplaintLogs().add(log);
@@ -161,5 +199,41 @@ return null;
         }).toList();
         complaint.getComplaintAttachment().addAll(attachmentList);
         return attachmentList;
+    }
+
+    private ComplaintLogResponseDTO mapToComplaintLogResponseDto(ComplaintLog complaintLog){
+       ComplaintLogResponseDTO responseDTO = new ComplaintLogResponseDTO();
+       responseDTO.setComplaintId(complaintLog.getComplaint().getId());
+       responseDTO.setActionBy(complaintLog.getActionBy().getUserProfile().getFullName());
+       responseDTO.setId(complaintLog.getId());
+       responseDTO.setRemark(complaintLog.getRemark());
+       responseDTO.setNewStatus(complaintLog.getNewStatus());
+       responseDTO.setPreviousStatus(complaintLog.getPreviousStatus());
+       responseDTO.setLogTime(complaintLog.getLogTime());
+       responseDTO.setTicketId(complaintLog.getTicketId());
+       return responseDTO;
+
+    }
+
+    private ComplaintResponseDTO mapToComplaintResponseDto(Complaint complaint){
+       ComplaintResponseDTO dto = new ComplaintResponseDTO();
+        dto.setAttachments(complaint.getComplaintAttachment());
+        dto.setAssignedTo(complaint.getUser().getUserProfile().getFullName());
+        dto.setCategory(complaint.getCategory());
+        dto.setUpdatedAt(complaint.getUpdatedAt());
+        dto.setCreatedAt(complaint.getCreatedAt());
+        dto.setUpdatedBy(complaint.getUpdatedBy().getUserProfile().getFullName());
+        dto.setStatus(complaint.getStatus());
+        dto.setId(complaint.getId());
+        dto.setPriority(complaint.getPriority());
+        dto.setTicketId(complaint.getTicketId());
+        dto.setTitle(complaint.getTitle());
+        dto.setDescription(complaint.getDescription());
+        dto.setRemark(complaint.getRemark());
+        dto.setResolvedAt(complaint.getResolvedAt());
+        dto.setName(complaint.getUser().getUserProfile().getFullName());
+        dto.setImageUrl(complaint.getUser().getUserProfile().getImageUrl());
+        dto.setEmail(complaint.getUser().getEmail());
+        return dto;
     }
 }
