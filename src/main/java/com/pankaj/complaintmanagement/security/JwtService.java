@@ -6,12 +6,15 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+
 @Service
 public class JwtService {
     @Value("${jwt-secret}")
@@ -28,7 +31,11 @@ public class JwtService {
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRY))
                 .setIssuedAt(new Date())
                 .claim("token_type", TokenType.ACCESS.name())
-                .claim("role", userDetails.getAuthorities())
+
+                .claim("role", userDetails.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toList()))
+
                 .signWith(getPrivateKey())
                 .compact();
     }
@@ -44,6 +51,14 @@ public class JwtService {
     }
     public TokenType extractTokenType(Claims claims) {
         return TokenType.valueOf(claims.get("token_type", String.class));
+    }
+    public List<SimpleGrantedAuthority> extractAuthority(Claims claims) {
+        //we will get roles in the form of list
+        List<String> roles = claims.get("role", List.class);
+        if(roles == null)new ArrayList<>();
+        //after get roles in String format, we will convert into SimpleGrantAuthority
+       return roles.stream().map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
     }
 
     public String extractUsername(Claims claims){

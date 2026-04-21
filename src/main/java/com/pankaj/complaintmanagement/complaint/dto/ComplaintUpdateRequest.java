@@ -2,17 +2,21 @@ package com.pankaj.complaintmanagement.complaint.dto;
 
 import com.pankaj.complaintmanagement.common.enums.Priority;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import java.util.List;
-
-public class ComplaintRequest {
+public class ComplaintUpdateRequest {
+    @NotNull(message = "Id can't be null")
     private Long id;
+    @NotBlank(message = "Title is required to update")
     private String title;
+    @NotBlank(message = "Description is required to update")
     private String description;
     private String remark;
-    private ComplaintCategory category;
+    @NotNull(message = "Priority is mandatory")
     private Priority priority;
+    @NotNull(message = "Category is required")
+    private ComplaintCategory category;
 
     public Long getId() {
         return id;
@@ -20,14 +24,6 @@ public class ComplaintRequest {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Priority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Priority priority) {
-        this.priority = priority;
     }
 
     public String getTitle() {
@@ -52,6 +48,14 @@ public class ComplaintRequest {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public void setPriority(Priority priority) {
+        this.priority = priority;
     }
 
     public ComplaintCategory getCategory() {

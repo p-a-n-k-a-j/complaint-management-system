@@ -21,6 +21,7 @@ public class ComplaintResponseDTO {
     private ComplaintCategory category;
     private String updatedBy;
     private Priority priority;
+    private String nameInitials; //ager image nhi mila to me placeholder me uska name ka first latter bhejunga.
     private String name;   // Extra call se bachne ke liye (optional)
     private String email;
     private String imageUrl;
@@ -28,6 +29,13 @@ public class ComplaintResponseDTO {
     private LocalDateTime resolvedAt;
     private List<ComplaintAttachment> attachments;
 
+    public String getNameInitials() {
+        return nameInitials;
+    }
+
+    public void setNameInitials(String nameInitials) {
+        this.nameInitials = nameInitials;
+    }
 
     public Long getId() {
         return id;

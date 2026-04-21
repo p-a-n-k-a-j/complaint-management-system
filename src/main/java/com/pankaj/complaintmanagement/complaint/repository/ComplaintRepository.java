@@ -9,6 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     boolean existsByTicketId(String ticketId);
@@ -19,5 +23,14 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
     Page<Complaint> findByCategory(ComplaintCategory category, Pageable pageable);
     Page<Complaint> findByStatusAndCategory(ComplaintStatus status, ComplaintCategory category, Pageable pageable);
 
-    Page<Complaint> findByTicketId(String ticketId, Pageable pageable);
+    Optional<Complaint> findByTicketId(String ticketId);
+
+    Optional<Complaint> findByUserAndId(Long id, User user);
+    Page <Complaint> findByAssignedTo(User admin,Pageable pageable);
+
+
+    List<Complaint> findByAssignedToAndUpdatedAtBetween(User admin, LocalDateTime startOfDay, LocalDateTime endOfDay);
+    List<Complaint> findByUserAndUpdatedAtBetween(User user, LocalDateTime startOfDay, LocalDateTime endOfDay);
+
+    List<Complaint> findByUpdatedAtBetween(LocalDateTime startOfDay, LocalDateTime endOfDay);
 }
