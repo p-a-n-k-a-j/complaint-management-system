@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.notification;
 
+import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.api.mailer.config.TransportStrategy;
@@ -7,7 +8,6 @@ import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
 @Service
 public class EmailService {
     private static final String CONSTANT_FROM = "Complaint Management Team";
@@ -48,13 +48,23 @@ public class EmailService {
     }
 
 
-    public void sendCustomEmail(String recipientEmail, String subject, String message){
+    public void sendCustomEmailInHtml(String recipientEmail, String subject, String message){
         Email email = EmailBuilder.startingBlank()
                 .from(CONSTANT_FROM, CONSTANT_FROM_EMAIL)
                 .to(recipientEmail)
                 .withSubject(subject)
                 .withReplyTo(recipientEmail)
                 .withHTMLText(message)
+                .buildEmail();
+        mailer.sendMail(email);
+    }
+    public void sendCustomEmailInPlainText(String recipientEmail, String subject, String message){
+        Email email = EmailBuilder.startingBlank()
+                .from(CONSTANT_FROM, CONSTANT_FROM_EMAIL)
+                .to(recipientEmail)
+                .withSubject(subject)
+                .withReplyTo(recipientEmail)
+                .withPlainText(message)
                 .buildEmail();
         mailer.sendMail(email);
     }
@@ -97,17 +107,12 @@ public class EmailService {
         </html>
         """, name);
 
-        sendCustomEmail(recipientEmail, subject, message);
+        sendCustomEmailInHtml(recipientEmail, subject, message);
     }
 
-    public void sendComplaintStatusUpdateEmail(
-            String recipientEmail,
-            String name,
-            String complaintId,
-            String status,
-            String adminMessage) {
+    public void sendComplaintStatusUpdateEmail(ComplaintResponseDTO dto) {
 
-        String subject = "Update on Your Complaint #" + complaintId;
+        String subject = "Update on Your Complaint #" + dto.getId();
 
         String message = String.format("""
         <html>
@@ -140,10 +145,31 @@ public class EmailService {
             </div>
         </body>
         </html>
-        """, name, complaintId, status, adminMessage);
+        """, dto.getName(), dto.getId(), dto.getStatus(), dto.getRemark());
 
-        sendCustomEmail(recipientEmail, subject, message);
+        sendCustomEmailInHtml(dto.getEmail(), subject, message);
     }
+    public void sendRemarkChangeEmail(ComplaintResponseDTO dto) {
+        // 1. HTML Template using Text Block (Java 15+)
+        String htmlContent = """
+        <div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; text-align: center;">
+            <h2 style="color: #2c3e50;">Complaint Update</h2>
+            <p style="font-size: 16px; color: #555;">Admin has added a new remark to your complaint.</p>
+            
+            <div style="background-color: #f9f9f9; padding: 15px; border-left: 5px solid #3498db; margin: 20px 0; text-align: left;">
+                <strong>Remark:</strong>
+                <p style="font-style: italic; color: #333;">%s</p>
+            </div>
 
+            <p style="font-size: 12px; color: #888;">Ticket ID: <strong>%s</strong></p>
+            <hr style="border: 0; border-top: 1px solid #eee;">
+            <p style="font-size: 14px; color: #2ecc71;">Keep tracking your complaint for further updates!</p>
+        </div>
+        """.formatted(dto.getRemark(), dto.getTicketId());
+
+        // 2. Call your email service
+        String subject = "Update on Complaint #" + dto.getTicketId();
+        sendCustomEmailInHtml(dto.getEmail(), subject, htmlContent);
+    }
 
 }

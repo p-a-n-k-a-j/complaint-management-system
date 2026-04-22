@@ -2,6 +2,7 @@ package com.pankaj.complaintmanagement.complaint.service;
 
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import com.pankaj.complaintmanagement.complaint.dto.*;
+import com.pankaj.complaintmanagement.entity.Complaint;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import org.springframework.data.domain.Page;
@@ -27,7 +28,7 @@ public interface ComplaintService {
      * Updates the status and adds a remark to a specific complaint.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    void updateComplaintStatus(StatusChangeRequest request, User admin);
+    ComplaintResponseDTO updateComplaintStatus(Long complaintId, ComplaintStatus status, String remark, User admin);
 
     /**
      * Retrieves all activity logs for a given ticket ID.
@@ -62,7 +63,7 @@ public interface ComplaintService {
      * Adds a management remark to a complaint without changing its status.
      */
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
-    void setRemarkToComplaint(Long complaintId, String remark, User adminAndSuperAdmin);
+    ComplaintResponseDTO setRemarkToComplaint(Long complaintId, String remark, User adminAndSuperAdmin);
 
     /**
      * Assigns a complaint to a specific admin.

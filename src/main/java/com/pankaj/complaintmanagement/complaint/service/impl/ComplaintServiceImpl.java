@@ -146,16 +146,16 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Transactional
     @Override
-    public void updateComplaintStatus(StatusChangeRequest request, User admin) {
-       Complaint complaint =  complaintRepository.findById(request.getComplaintId()).orElseThrow(()-> new ComplaintNotFoundException("complaint not found"));
+    public ComplaintResponseDTO updateComplaintStatus(Long complaintId, ComplaintStatus newStatus, String remark, User admin) {
+       Complaint complaint =  complaintRepository.findById(complaintId).orElseThrow(()-> new ComplaintNotFoundException("complaint not found"));
        ComplaintStatus previousStatus = complaint.getStatus();
         // 2. Business Rule: Resolved ya Rejected complaint ko dobara nahi chhed sakte (Optional but Recommended)
-        if(!isValidTransition(previousStatus, request.getStatus())){
-            throw new IllegalStateException("Invalid status transition: Cannot change status from " + previousStatus + " to " + request.getStatus());
+        if(!isValidTransition(previousStatus, newStatus)){
+            throw new IllegalStateException("Invalid newStatus transition: Cannot change newStatus from " + previousStatus + " to " + newStatus);
         }
-       complaint.setStatus(request.getStatus());
-       if(request.getRemark() != null){
-        complaint.setRemark(request.getRemark());
+       complaint.setStatus(newStatus);
+       if(remark != null){
+        complaint.setRemark(remark);
        }
        if(complaint.getAssignedTo() == null) {
            complaint.setAssignedTo(admin);
@@ -167,21 +167,21 @@ public class ComplaintServiceImpl implements ComplaintService {
            webSocketService.sendPrivateNotification(admin.getEmail(), new WebSocketService.NotificationResponse("Task Assigned", adminMsg, complaint.getTicketId()));
        }
 
-       if(request.getStatus() == ComplaintStatus.RESOLVED){
+       if(newStatus == ComplaintStatus.RESOLVED){
         complaint.setResolvedAt(LocalDateTime.now());
        }
        complaint.setStatus(ComplaintStatus.IN_PROGRESS);
        complaint.setUpdatedAt(LocalDateTime.now());
        complaint.setUpdatedBy(admin);
-       ComplaintLog savedLog = this.saveLog(complaint, previousStatus, request.getStatus());
+       ComplaintLog savedLog = this.saveLog(complaint, previousStatus, newStatus);
         ComplaintLogResponseDTO dto = mapToComplaintLogResponseDto(savedLog);
         // ye updated log broadcast karne ke liye
         webSocketService.sendUpdatedLog(dto);
         //ye user ko notify karne ke liye private endpoint
 
-        String statusChangeMessage="Good news! Your complaint #" + complaint.getTicketId() + "  status has been changed to " + request.getStatus() + ". We're on it!";
+                String statusChangeMessage="Good news! Your complaint #" + complaint.getTicketId() + "  newStatus has been changed to " + newStatus + ". We're on it!";
         webSocketService.sendPrivateNotification(complaint.getUser().getEmail(), new WebSocketService.NotificationResponse("STATUS_UPDATED", statusChangeMessage, complaint.getTicketId()));
-
+        return this.mapToComplaintResponseDto(complaint);
     }
 //TODO: here update work is done
 
@@ -190,7 +190,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Transactional
     @Override
-    public void setRemarkToComplaint(Long complaintId, String remark, User adminAndSuperAdmin){
+    public ComplaintResponseDTO setRemarkToComplaint(Long complaintId, String remark, User adminAndSuperAdmin){
         Complaint complaint = complaintRepository.findById(complaintId).orElseThrow(() -> new ComplaintNotFoundException("Complaint not found"));
         complaint.setRemark(remark);
         complaint.setUpdatedBy(adminAndSuperAdmin);
@@ -198,6 +198,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         ComplaintLog complaintLog = saveLog(complaint, complaint.getStatus(), complaint.getStatus());
       //it sendUpdatedLog will send to this complaint id
         webSocketService.sendUpdatedLog(this.mapToComplaintLogResponseDto(complaintLog));
+        return this.mapToComplaintResponseDto(complaint);
     }
 
     @Transactional
