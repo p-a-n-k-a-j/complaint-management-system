@@ -154,5 +154,7 @@ public interface ComplaintService {
      * ***/
     @PreAuthorize("hasRole('USER', 'SUPER_ADMIN')")
     Map<String, Long> getUserStats(Long userId);
+
+    void deleteAttachment(Long complaintId, User user);
 }
 

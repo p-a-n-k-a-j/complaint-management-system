@@ -77,6 +77,11 @@ public class ComplaintController {
         complaintService.updateAttachments(complaintId, files, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Successfully updated all attachments"));
     }
+    @DeleteMapping("/attachments/{complaintId}")
+    public ResponseEntity<ApiResponse<?>> deleteAttachment(@PathVariable Long complaintId, @AuthenticationPrincipal CustomUserDetails userDetails){
+        complaintService.deleteAttachment(complaintId, userDetails.getUser());
+        return ResponseEntity.ok(ApiResponse.success("attachment deleted successfully"));
+    }
 
     @PostMapping(value = "/add-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> addAttachment(

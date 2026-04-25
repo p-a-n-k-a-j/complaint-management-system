@@ -92,7 +92,7 @@ public class UserProfileService {
         Map upload = cloudinaryService.upload(file);
        String url= upload.get("secure_url").toString();
         userProfile.setImageUrl(url);
-        userProfile.setPublicId(upload.get("public_id").toString());
+        userProfile.setPublicId(upload.get("public_id").toString().trim());
         return url;
     }
 
@@ -113,8 +113,7 @@ public class UserProfileService {
     @Transactional
     public void removeProfileImage(User  user) {
         UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("User Profile not found!"));
-        String publicId = profile.getPublicId();
-        cloudinaryService.delete(publicId);
+        cloudinaryService.delete(profile.getPublicId().trim());
         profile.setImageUrl(null);
         profile.setPublicId(null);
 
@@ -127,7 +126,7 @@ public class UserProfileService {
 
         UserProfile userProfile =userProfileRepository.findByUser(user).orElseThrow(() -> new UserProfileNotFoundException("UserProfile not found"));
        if(userProfile.getPublicId() != null && userProfile.getPublicId().isBlank()){
-           cloudinaryService.delete(userProfile.getPublicId());
+           cloudinaryService.delete(userProfile.getPublicId().trim());
        }
        userProfileRepository.delete(userProfile);
     }

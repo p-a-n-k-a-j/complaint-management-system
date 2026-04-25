@@ -27,6 +27,7 @@ public class CloudinaryService {
     //common delete method
     public Map delete(String publicId) {
         try {
+
             return cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
         }catch (IOException e){
             //ise mene checked se unchecked me convert kar liye taki throw nhi karna pade or global handler handle kar le

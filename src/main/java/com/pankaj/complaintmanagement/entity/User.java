@@ -30,6 +30,7 @@ public class User {
     @JsonIgnore
     private List<Complaint> complaints;
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private UserProfile userProfile;
 
     public UserProfile getUserProfile() {

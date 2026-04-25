@@ -28,7 +28,7 @@ public class ComplaintResponseDTO {
     private String assignedTo;
     private LocalDateTime resolvedAt;
     private String resolutionTime;
-    private List<ComplaintAttachment> attachments;
+    private List<AttachmentResponseDto> attachments;
 
     public String getResolutionTime() {
         return resolutionTime;
@@ -174,11 +174,11 @@ public class ComplaintResponseDTO {
         this.resolvedAt = resolvedAt;
     }
 
-    public List<ComplaintAttachment> getAttachments() {
+    public List<AttachmentResponseDto> getAttachments() {
         return attachments;
     }
 
-    public void setAttachments(List<ComplaintAttachment> attachments) {
+    public void setAttachments(List<AttachmentResponseDto> attachments) {
         this.attachments = attachments;
     }
 

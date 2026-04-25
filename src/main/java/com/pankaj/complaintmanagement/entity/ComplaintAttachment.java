@@ -9,7 +9,7 @@ public class ComplaintAttachment {
     private Long id;
     @ManyToOne
     private Complaint complaint;
-    private String attachmentUrls; // Agar files hain toh
+    private String attachmentUrl; // Agar files hain toh
     private String publicId;
 
     public Long getId() {
@@ -28,12 +28,12 @@ public class ComplaintAttachment {
         this.complaint = complaint;
     }
 
-    public String getAttachmentUrls() {
-        return attachmentUrls;
+    public String getAttachmentUrl() {
+        return attachmentUrl;
     }
 
-    public void setAttachmentUrls(String attachmentUrls) {
-        this.attachmentUrls = attachmentUrls;
+    public void setAttachmentUrl(String attachmentUrls) {
+        this.attachmentUrl = attachmentUrls;
     }
 
     public String getPublicId() {

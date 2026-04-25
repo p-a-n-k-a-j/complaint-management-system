@@ -4,9 +4,12 @@ import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.auth.service.AuthService;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
+import com.pankaj.complaintmanagement.complaint.dto.AttachmentResponseDto;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
+import com.pankaj.complaintmanagement.complaint.repository.ComplaintAttachmentRepository;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintRepository;
 import com.pankaj.complaintmanagement.entity.Complaint;
+import com.pankaj.complaintmanagement.entity.ComplaintAttachment;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.UserAlreadyExistsException;
@@ -26,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -37,13 +41,15 @@ public class SuperAdminService {
     private final ComplaintRepository complaintRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
+    private final ComplaintAttachmentRepository attachmentRepository;
     @Autowired
-    public SuperAdminService(AuthRepository authRepository, UserProfileRepository profileRepository, ComplaintRepository complaintRepository, PasswordEncoder passwordEncoder, AuthService authService) {
+    public SuperAdminService(AuthRepository authRepository, UserProfileRepository profileRepository, ComplaintRepository complaintRepository, PasswordEncoder passwordEncoder, AuthService authService, ComplaintAttachmentRepository attachmentRepository) {
         this.authRepository = authRepository;
         this.profileRepository = profileRepository;
         this.complaintRepository = complaintRepository;
         this.passwordEncoder = passwordEncoder;
         this.authService = authService;
+        this.attachmentRepository = attachmentRepository;
     }
 
     @Transactional
@@ -151,7 +157,17 @@ public class SuperAdminService {
 
         //direct fields that are not causing null
         //complaint info
-        dto.setAttachments(complaint.getComplaintAttachment());
+        List<ComplaintAttachment> byComplaint = attachmentRepository.findByComplaint(complaint);
+        //direct fields that are not causing null
+        //complaint info
+        //here attachment work is done
+        dto.setAttachments(byComplaint.stream()
+                .map(attachment -> new AttachmentResponseDto.Builder()
+                        .attachmentUrl(attachment.getAttachmentUrl())
+                        .id(attachment.getId())
+                        .publicId(attachment.getPublicId())
+                        .complaintId(attachment.getComplaint().getId())
+                        .build()).toList());
         dto.setCategory(complaint.getCategory());
         dto.setUpdatedAt(complaint.getUpdatedAt());
         dto.setCreatedAt(complaint.getCreatedAt());

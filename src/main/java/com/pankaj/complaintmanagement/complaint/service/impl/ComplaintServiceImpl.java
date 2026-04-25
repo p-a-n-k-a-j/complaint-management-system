@@ -2,9 +2,11 @@ package com.pankaj.complaintmanagement.complaint.service.impl;
 
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
+import com.pankaj.complaintmanagement.common.enums.Priority;
 import com.pankaj.complaintmanagement.common.services.CloudinaryService;
 import com.pankaj.complaintmanagement.common.services.WebSocketService;
 import com.pankaj.complaintmanagement.complaint.dto.*;
+import com.pankaj.complaintmanagement.complaint.repository.ComplaintAttachmentRepository;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintLogRepository;
 import com.pankaj.complaintmanagement.complaint.repository.ComplaintRepository;
 import com.pankaj.complaintmanagement.complaint.service.ComplaintService;
@@ -38,23 +40,22 @@ public class ComplaintServiceImpl implements ComplaintService {
    private final AuthRepository authRepository;
    private final ComplaintRepository complaintRepository;
    private final ComplaintLogRepository complaintLogRepository;
-   private final UserProfileRepository userProfileRepository;
    private final CloudinaryService cloudinaryService;
    private final WebSocketService webSocketService;
+   private final ComplaintAttachmentRepository attachmentRepository;
    @Autowired
-    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, UserProfileRepository userProfileRepository, CloudinaryService cloudinaryService, WebSocketService webSocketService) {
+    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, CloudinaryService cloudinaryService, WebSocketService webSocketService, ComplaintAttachmentRepository attachmentRepository) {
         this.authRepository = authRepository;
         this.complaintRepository = complaintRepository;
         this.complaintLogRepository = complaintLogRepository;
-        this.userProfileRepository = userProfileRepository;
        this.cloudinaryService = cloudinaryService;
        this.webSocketService = webSocketService;
+       this.attachmentRepository = attachmentRepository;
    }
 
     @Override
     public void createComplaint(ComplaintRequest request, User user) {
         User foundUser =authRepository.findById(user.getId()).orElseThrow(()-> new UserNotFoundException("user not found"));
-        UserProfile profile = userProfileRepository.findByUser(foundUser).orElseThrow(()-> new UserProfileNotFoundException("user profile not found"));
       String ticketId="";
         do{
             ticketId = generateTicketId();
@@ -70,7 +71,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setUpdatedBy(user);
         complaint.setTicketId(ticketId);
         complaint.setUser(foundUser);
-        complaint.setPriority(request.getPriority());
+        complaint.setPriority(Priority.LOW);
 
 
         this.saveLog(complaint, null, ComplaintStatus.PENDING);
@@ -89,7 +90,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
         //now time to set new attachments
         //the set attachment: first remove all previous or junk files and add new one
-        complaint.setComplaintAttachment(this.updateAttachments(complaint, files));
+        this.updateAttachments(complaint, files);
 
     }
     @Transactional
@@ -124,7 +125,6 @@ public class ComplaintServiceImpl implements ComplaintService {
         if(request.getDescription() != null)complaint.setDescription(request.getDescription());
         if(request.getRemark() != null)complaint.setRemark(request.getRemark());
         if(request.getCategory() != null)complaint.setCategory(request.getCategory());
-        if(request.getPriority() != null)complaint.setPriority(request.getPriority());
         complaint.setUpdatedAt(LocalDateTime.now());
         complaint.setUpdatedBy(currentUser);
     }
@@ -391,7 +391,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         if(complaint.getComplaintAttachment() != null){
             //before deleting the complaint, delete all attachments from cloud
-            complaint.getComplaintAttachment().forEach(attachment -> cloudinaryService.delete(attachment.getPublicId()));
+            complaint.getComplaintAttachment().forEach(attachment -> cloudinaryService.delete(attachment.getPublicId().trim()));
         }
         //after that, we delete the complaint entity
         //after complaint deletion the related logs deleted as well
@@ -427,9 +427,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
     //this is responsible to handle all Complaint attachment
     //it will remove all existing files and added new one
-    private List<ComplaintAttachment> updateAttachments(Complaint complaint, List<MultipartFile> files){
-        if (files == null || files.isEmpty()) return new ArrayList<>();
-
+    private void updateAttachments(Complaint complaint, List<MultipartFile> files){
+        if(files.isEmpty())return;
         // first, we remove all cloudinary files
         if (complaint.getComplaintAttachment() != null) {
             complaint.getComplaintAttachment().forEach(att -> cloudinaryService.delete(att.getPublicId()));
@@ -444,13 +443,13 @@ public class ComplaintServiceImpl implements ComplaintService {
             Map upload = cloudinaryService.upload(file);
             ComplaintAttachment complaintAttachment = new ComplaintAttachment();
             complaintAttachment.setComplaint(complaint);
-            complaintAttachment.setAttachmentUrls(upload.get("secure_url").toString());
-            complaintAttachment.setPublicId(upload.get("public_id").toString());
+            complaintAttachment.setAttachmentUrl(upload.get("secure_url").toString());
+            complaintAttachment.setPublicId(upload.get("public_id").toString().trim());
             return complaintAttachment;
         }).toList();
 
         complaint.getComplaintAttachment().addAll(newAttachments);
-        return newAttachments;
+
     }
     public void addAttachments (Complaint complaint, List<MultipartFile> files){
         if(files.isEmpty())return;
@@ -458,8 +457,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             Map upload = cloudinaryService.upload(file);
             ComplaintAttachment attachment = new ComplaintAttachment();
             attachment.setComplaint(complaint);
-            attachment.setAttachmentUrls(upload.get("secure_url").toString());
-            attachment.setPublicId(upload.get("public_id").toString());
+            attachment.setAttachmentUrl(upload.get("secure_url").toString());
+            attachment.setPublicId(upload.get("public_id").toString().trim());
             complaint.getComplaintAttachment().add(attachment);
         });
     }
@@ -501,7 +500,16 @@ public class ComplaintServiceImpl implements ComplaintService {
         report.put("TOTAL_Complaints", total);
         return report;
     }
-
+    @Transactional
+    @Override
+    public void deleteAttachment(Long complaintId, User user) {
+        Complaint complaint = complaintRepository.findById(complaintId).orElseThrow(() -> new ComplaintNotFoundException("Complaint not found"));
+        if(!complaint.getUser().getId().equals(user.getId())){
+          throw new UnauthorizedActionException("You are not authorized user to take this action");
+        }
+        complaint.getComplaintAttachment().forEach(c -> cloudinaryService.delete(c.getPublicId().trim()));
+        complaint.getComplaintAttachment().clear();
+    }
 
 
     private ComplaintLogResponseDTO mapToComplaintLogResponseDto(ComplaintLog complaintLog){
@@ -520,10 +528,18 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     private ComplaintResponseDTO mapToComplaintResponseDto(Complaint complaint){
        ComplaintResponseDTO dto = new ComplaintResponseDTO();
-
-       //direct fields that are not causing null
+        List<ComplaintAttachment> byComplaint = attachmentRepository.findByComplaint(complaint);
+        //direct fields that are not causing null
         //complaint info
-        dto.setAttachments(complaint.getComplaintAttachment());
+        //here attachment work is done
+        dto.setAttachments(byComplaint.stream()
+                .map(attachment -> new AttachmentResponseDto.Builder()
+                        .attachmentUrl(attachment.getAttachmentUrl())
+                        .id(attachment.getId())
+                                .publicId(attachment.getPublicId().trim())
+                                .complaintId(attachment.getComplaint().getId())
+                                .build()).toList());
+
         dto.setCategory(complaint.getCategory());
         dto.setUpdatedAt(complaint.getUpdatedAt());
         dto.setCreatedAt(complaint.getCreatedAt());

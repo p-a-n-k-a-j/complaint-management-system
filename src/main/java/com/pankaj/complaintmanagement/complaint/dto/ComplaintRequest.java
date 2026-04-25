@@ -12,7 +12,7 @@ public class ComplaintRequest {
     private String description;
     private String remark;
     private ComplaintCategory category;
-    private Priority priority;
+
 
     public Long getId() {
         return id;
@@ -22,13 +22,6 @@ public class ComplaintRequest {
         this.id = id;
     }
 
-    public Priority getPriority() {
-        return priority;
-    }
-
-    public void setPriority(Priority priority) {
-        this.priority = priority;
-    }
 
     public String getTitle() {
         return title;
