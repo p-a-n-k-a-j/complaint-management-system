@@ -91,12 +91,12 @@ public class SuperAdminService {
 
     public Page<UserDto> getAllUser(int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-        return authRepository.findAllByRoleWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
+        return authRepository.findAllByRolesWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
 
     public Page<UserDto> getAllAdmin(int page, int size){
         Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-        return authRepository.findAllByRoleWithProfile(UserRole.ROLE_ADMIN, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
+        return authRepository.findAllByRolesWithProfile(UserRole.ROLE_ADMIN, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
 
     private UserDto mapUserTOUserDto(User user, UserProfile userProfile){

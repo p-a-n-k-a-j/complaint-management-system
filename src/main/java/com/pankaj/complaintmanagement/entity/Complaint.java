@@ -40,7 +40,8 @@ public class Complaint {
     private List<ComplaintLog> complaintLogs = new ArrayList<>();
     @Column(columnDefinition = "TEXT")
     private String remark; // Admin ka final comment
-    @Column(name = "action_by_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "action_by_id")
     private User updatedBy; // Admin ka naam/email jisne last change kiya
     @Enumerated(EnumType.STRING)
     private ComplaintCategory category;

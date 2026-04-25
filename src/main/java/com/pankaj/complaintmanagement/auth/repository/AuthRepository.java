@@ -10,7 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 public interface AuthRepository extends JpaRepository<User, Long> {
     // Role ke basis par users find karne ke liye
-    Page<User> findAllByRole(UserRole role, Pageable pageable);
+    Page<User> findAllByRoles(UserRole role, Pageable pageable);
 
     User findByEmail(String email);
 
@@ -19,5 +19,5 @@ public interface AuthRepository extends JpaRepository<User, Long> {
             "JOIN u.roles r " +            // Roles collection mein ghuse
             "WHERE r = :role",             // Filter lagaya
             countQuery = "SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r = :role")
-    Page<User> findAllByRoleWithProfile(@Param("role") UserRole role, Pageable pageable);
+    Page<User> findAllByRolesWithProfile(@Param("role") UserRole role, Pageable pageable);
 }

@@ -27,7 +27,7 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
 
     Optional<Complaint> findByTicketId(String ticketId);
 
-    Optional<Complaint> findByUserAndId(Long id, User user);
+    Optional<Complaint> findByUserAndId(User user, Long id);
     Page <Complaint> findByAssignedTo(User admin,Pageable pageable);
 
 

@@ -4,7 +4,7 @@ import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-
+@Entity
 public class ComplaintLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,7 +21,8 @@ public class ComplaintLog {
     @Column(columnDefinition = "TEXT")
     private String remark;
     private LocalDateTime logTime;
-    @Column(name = "action_by_id")
+    @ManyToOne
+    @JoinColumn(name = "action_by_id")
     private User actionBy;
 
     public ComplaintStatus getPreviousStatus() {

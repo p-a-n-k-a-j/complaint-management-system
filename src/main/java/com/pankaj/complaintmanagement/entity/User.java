@@ -1,16 +1,15 @@
 package com.pankaj.complaintmanagement.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
-import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
-@Entity
 
+@Entity
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,14 +19,15 @@ public class User {
     @Column(nullable = false)
     private String password;
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles;
     @Enumerated(EnumType.STRING)
     private AccountStatus status;
     private LocalDateTime createdAt;
     private String refreshToken;
-    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JsonIgnoreProperties
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Complaint> complaints;
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private UserProfile userProfile;

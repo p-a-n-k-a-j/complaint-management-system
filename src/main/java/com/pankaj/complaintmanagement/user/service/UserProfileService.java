@@ -21,11 +21,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -49,7 +46,7 @@ public class UserProfileService {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<UserDto> getAllUser(int page, int size){
     Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-    return authRepository.findAllByRoleWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
+    return authRepository.findAllByRolesWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
 
 

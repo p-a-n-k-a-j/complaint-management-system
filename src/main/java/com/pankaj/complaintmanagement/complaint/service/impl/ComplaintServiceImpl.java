@@ -114,7 +114,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Transactional
     @Override
     public void partialUpdateComplaint(ComplaintRequest request, User currentUser) {
-        Complaint complaint=complaintRepository.findByUserAndId(request.getId(), currentUser).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
+        Complaint complaint=complaintRepository.findByUserAndId(currentUser, request.getId()).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
 
         // Business Rule: Agar status PENDING nahi hai, toh user edit nahi kar sakta
         if (complaint.getStatus() != ComplaintStatus.PENDING) {
