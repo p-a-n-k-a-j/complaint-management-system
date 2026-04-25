@@ -19,9 +19,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/user-profile")
 public class UserProfileController {
-    @Value("${project.image.path}")
-    private String folder;
-    private final UserProfileService userProfileService;
+     private final UserProfileService userProfileService;
     @Autowired
     public UserProfileController(UserProfileService userProfileService){
         this.userProfileService = userProfileService;

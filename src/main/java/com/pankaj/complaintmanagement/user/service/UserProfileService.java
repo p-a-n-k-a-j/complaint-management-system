@@ -86,7 +86,7 @@ public class UserProfileService {
         if(profileRequest.getState() != null)userProfile.setState(profileRequest.getState());
         if(profileRequest.getBio() != null)userProfile.setBio(profileRequest.getBio());
     }
-
+    @Transactional
     public String setImageUrl(MultipartFile file,User user){
         UserProfile userProfile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("user profile not found"));
         Map upload = cloudinaryService.upload(file);
@@ -103,10 +103,10 @@ public class UserProfileService {
                 .path(imageName)
                 .toUriString();
     }*/
-    @RolesAllowed({"ROLE_ADMIN", "ROLE_SUPER_ADMIN"})
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     public UserDto getUserProfileById(Long id) {
         User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found!"));
-        UserProfile profile = userProfileRepository.findByUser(user).orElseThrow(()-> new UserProfileNotFoundException("user profile not found!"));
+        UserProfile profile = user.getUserProfile();
         return this.mapUserTOUserDto(user, profile);
     }
 
