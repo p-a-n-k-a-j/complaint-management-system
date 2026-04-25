@@ -1,6 +1,7 @@
 package com.pankaj.complaintmanagement.notification;
 
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
+import com.pankaj.complaintmanagement.entity.Complaint;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.api.mailer.config.TransportStrategy;
@@ -109,7 +110,104 @@ public class EmailService {
 
         sendCustomEmailInHtml(recipientEmail, subject, message);
     }
+    public void sendRegistrationEmailToAdmin(String recipientEmail, String name, String tempPassword) {
+        String subject = "Welcome! Your Admin Account is Ready";
 
+        String message = String.format("""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color:#f4f7f9; padding:20px; color: #333;">
+        <div style="max-width:600px; margin:auto; background:white; padding:30px; border-radius:12px; border: 1px solid #e1e4e8;">
+            
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h2 style="color:#2c3e50; margin:0;">Account Registered</h2>
+                <p style="color:#7f8c8d; font-size:14px;">Complaint Management System</p>
+            </div>
+            
+            <p>Hello <strong>%s</strong>,</p>
+            
+            <p>Your account has been successfully created by the Super Admin. You can now log in to the dashboard using the credentials below:</p>
+            
+            <div style="background-color:#f8f9fa; padding:20px; border-radius:8px; border-left: 4px solid #3498db; margin:20px 0;">
+                <p style="margin:0; font-size:14px; color:#555;"><strong>Login Email:</strong> %s</p>
+                <p style="margin:10px 0 0 0; font-size:14px; color:#555;"><strong>Temporary Password:</strong> <span style="color:#e74c3c; font-weight:bold;">%s</span></p>
+            </div>
+            
+            <p style="font-size: 14px; color: #e67e22; font-weight: bold;">
+                Note: For security reasons, please change your password immediately after your first login.
+            </p>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="http://your-app-url.com/login" 
+                   style="background-color: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                   Login to Your Dashboard
+                </a>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin:30px 0;">
+            
+            <p style="font-size:12px; color:#95a5a6; text-align: center;">
+                Regards, <br>
+                <strong>System Administrator</strong>
+            </p>
+        </div>
+    </body>
+    </html>
+    """, name, recipientEmail, tempPassword);
+
+        sendCustomEmailInHtml(recipientEmail, subject, message);
+    }
+
+    public void sendAdminPromotionEmail(String recipientEmail, String name) {
+        String subject = "Promotion: You are now an Admin!";
+
+        String message = String.format("""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color:#f9f9f9; padding:20px;">
+        <div style="max-width:600px; margin:auto; background:white; padding:30px; border-radius:12px; border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <span style="background-color: #f1c40f; color: #000; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold;">SYSTEM UPDATE</span>
+            </div>
+
+            <h2 style="color:#2c3e50; text-align: center;">Congratulations, %s!</h2>
+            
+            <p style="font-size: 16px; color: #34495e;">
+                We are pleased to inform you that your account has been <strong>elevated to Admin status</strong>.
+            </p>
+            
+            <p style="color: #555; line-height: 1.6;">
+                As an Admin, you now have the authority to:
+                <ul style="color: #555;">
+                    <li>Access the Admin Dashboard</li>
+                    <li>Manage and resolve user complaints</li>
+                    <li>Update complaint statuses and add remarks</li>
+                </ul>
+            </p>
+            
+            <div style="margin: 30px 0; text-align: center;">
+                <a href="http://your-app-url.com/admin/dashboard" 
+                   style="background-color: #3498db; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                   Go to Admin Dashboard
+                </a>
+            </div>
+
+            <p style="font-size: 14px; color: #e67e22; font-weight: bold;">
+                Note: Your existing login credentials remain the same.
+            </p>
+            
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+            
+            <p style="font-size:12px; color:#95a5a6; text-align: center;">
+                Regards, <br>
+                <strong>System Administration Team</strong>
+            </p>
+        </div>
+    </body>
+    </html>
+    """, name);
+
+        sendCustomEmailInHtml(recipientEmail, subject, message);
+    }
     public void sendComplaintStatusUpdateEmail(ComplaintResponseDTO dto) {
 
         String subject = "Update on Your Complaint #" + dto.getId();
@@ -170,6 +268,53 @@ public class EmailService {
         // 2. Call your email service
         String subject = "Update on Complaint #" + dto.getTicketId();
         sendCustomEmailInHtml(dto.getEmail(), subject, htmlContent);
+    }
+
+    public void sendAssignmentEmail(Complaint complaint) {
+        String htmlContent = """
+        
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; background-color: #ffffff;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <span style="background-color: #3498db; color: white; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; text-transform: uppercase;">New Task</span>
+                <h2 style="color: #2c3e50; margin-top: 10px;">New Complaint Assigned</h2>
+            </div>
+            
+            <p style="color: #7f8c8d; font-size: 15px; line-height: 1.5;">
+                Hello Admin, <br>
+                A new complaint has been assigned to you by the Super Admin. Please review the details below and take necessary action.
+            </p>
+            
+            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #3498db;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Ticket ID:</td>
+                        <td style="padding: 5px 0; color: #2c3e50; font-weight: bold;">#%s</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Priority:</td>
+                        <td style="padding: 5px 0; color: #e74c3c; font-weight: bold;">High</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">User Email:</td>
+                        <td style="padding: 5px 0; color: #2c3e50;">%s</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="margin-top: 25px; text-align: center;">
+                <a href="http://your-app-url.com/admin/complaints/%s" 
+                   style="background-color: #2ecc71; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                   View Complaint Details
+                </a>
+            </div>
+
+            <p style="font-size: 11px; color: #bdc3c7; margin-top: 30px; text-align: center;">
+                This is an automated system notification. Please do not reply to this email.
+            </p>
+        </div>
+        """.formatted(complaint.getTicketId(), complaint.getTicketId(), complaint.getUser().getEmail(), complaint.getTicketId());
+
+        sendCustomEmailInHtml(complaint.getAssignedTo().getEmail(), "New Assignment - Ticket #" + complaint.getTicketId(), htmlContent);
     }
 
 }

@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -203,7 +204,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
     @Transactional
     @Override
-    public void assignTo(Long complaintId, Long adminId, User superAdmin) {
+    public Complaint assignTo(Long complaintId, Long adminId, User superAdmin) {
         Complaint complaint = complaintRepository.findById(complaintId).orElseThrow(() -> new ComplaintNotFoundException("Complaint not found"));
         User newAdmin = authRepository.findById(adminId).orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -241,6 +242,7 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         ComplaintLog complaintLog = saveLog(complaint, complaint.getStatus(), complaint.getStatus());
         webSocketService.sendUpdatedLog(mapToComplaintLogResponseDto(complaintLog));
+        return complaint;
     }
 
     //todo:from here all getter definition starts that can be for a complaint or complaintLog
@@ -462,6 +464,46 @@ public class ComplaintServiceImpl implements ComplaintService {
         });
     }
 
+    @Override
+    public Map<String, Long> getAdminStats(Long adminId) {
+        List<Object[]> objects = complaintRepository.countComplaintsByStatusForAdmin(adminId);
+        Map<String, Long> report = new HashMap<>();
+        long total =0;
+        // Default values (taki frontend par 0 dikhe agar data na ho)
+        report.put("PENDING", 0L);
+        report.put("IN_PROGRESS", 0L);
+        report.put("RESOLVED", 0L);
+        for (Object[] results: objects){
+            String status = results[0].toString();
+            long count = (long) results[1];
+            total += count;
+            report.put(status, count);
+        }
+        report.put("TOTAL_WORKLOAD", total);
+        return report;
+    }
+
+    @Override
+    public Map<String, Long> getUserStats(Long userId) {
+        List<Object[]> objects = complaintRepository.countComplaintsByStatusForUser(userId);
+        Map<String, Long> report = new HashMap<>();
+        long total =0;
+        // Default values (taki frontend par 0 dikhe agar data na ho)
+        report.put("PENDING", 0L);
+        report.put("IN_PROGRESS", 0L);
+        report.put("RESOLVED", 0L);
+        for (Object[] results: objects){
+            String status = results[0].toString();
+            long count = (long) results[1];
+            total += count;
+            report.put(status, count);
+        }
+        report.put("TOTAL_Complaints", total);
+        return report;
+    }
+
+
+
     private ComplaintLogResponseDTO mapToComplaintLogResponseDto(ComplaintLog complaintLog){
        ComplaintLogResponseDTO responseDTO = new ComplaintLogResponseDTO();
        responseDTO.setComplaintId(complaintLog.getComplaint().getId());
@@ -493,6 +535,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         dto.setDescription(complaint.getDescription());
         dto.setRemark(complaint.getRemark());
         dto.setResolvedAt(complaint.getResolvedAt());
+        dto.setResolutionTime(calculateResolutionDuration(complaint.getCreatedAt(), complaint.getResolvedAt()));
 
         //user Info
         UserProfile profile = complaint.getUser().getUserProfile();
@@ -524,5 +567,18 @@ public class ComplaintServiceImpl implements ComplaintService {
            case REJECTED, RESOLVED -> false; //this is a final state nothing happened or not changed
            default -> false;
        };
+    }
+
+    // ye hme duration nikal ke diga ki ek complaint ko resolve hone me kitna time lga.
+    private String calculateResolutionDuration(LocalDateTime createdAt, LocalDateTime resolvedAt) {
+        if (resolvedAt == null) return "Still In Progress";
+
+        Duration duration = Duration.between(createdAt, resolvedAt);
+
+        long days = duration.toDays();
+        long hours = duration.toHoursPart();
+        long minutes = duration.toMinutesPart();
+
+        return String.format("%d Days, %d Hours, %d Minutes", days, hours, minutes);
     }
 }

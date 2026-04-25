@@ -10,8 +10,13 @@ import com.pankaj.complaintmanagement.exception.custom.UserProfileNotFoundExcept
 import com.pankaj.complaintmanagement.user.dto.UpdateProfileRequest;
 import com.pankaj.complaintmanagement.user.dto.UserDto;
 import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
+import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.annotation.security.RolesAllowed;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,19 +43,15 @@ public class UserProfileService {
 
     public UserDto getUser(Long id) {
         User user = authRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
-        UserProfile userProfile = userProfileRepository.findByUser(user).orElseThrow(() -> new UserProfileNotFoundException("user profile not found"));
-        return mapUserTOUserDto(user, userProfile);
+        return mapUserTOUserDto(user, user.getUserProfile());
 
     }
-@PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
-    public List<UserDto> getAllUser(){
-        return authRepository.findAll()
-                .stream().map(user ->{
-                    UserProfile userProfile = userProfileRepository.findByUser(user)
-                            .orElseThrow(() -> new UserProfileNotFoundException("user profile not found"));
-                    return mapUserTOUserDto(user, userProfile);
-                }).toList();
+    @PreAuthorize("hasRole('ADMIN')")
+    public Page<UserDto> getAllUser(int page, int size){
+    Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
+    return authRepository.findAllByRoleWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
+
 
     private UserDto mapUserTOUserDto(User user, UserProfile userProfile){
         return new UserDto.Builder()

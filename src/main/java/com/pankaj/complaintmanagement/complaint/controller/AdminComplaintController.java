@@ -15,8 +15,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-@RestController()
+@RestController
 @RequestMapping("/api/admin/complaints")
 public class AdminComplaintController {
     private final ComplaintService complaintService;
@@ -55,7 +56,11 @@ public class AdminComplaintController {
         emailService.sendComplaintStatusUpdateEmail(dto);
      return ResponseEntity.ok(ApiResponse.success("Status changed successfully."));
     }
-
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<?>> getAdminStats(@AuthenticationPrincipal CustomUserDetails userDetails){
+        Map<String, Long> adminStats = complaintService.getAdminStats(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("Admin stats are present", adminStats));
+    }
 
 
 }

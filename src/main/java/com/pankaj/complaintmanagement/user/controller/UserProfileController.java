@@ -32,11 +32,6 @@ public class UserProfileController {
         return ResponseEntity.ok(ApiResponse.success("successfully found user data", userDto));
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<ApiResponse<List<UserDto>>> getAllUser(@AuthenticationPrincipal CustomUserDetails userDetails){
-        List<UserDto> allUserProfile =userProfileService.getAllUser();
-        return ResponseEntity.ok(ApiResponse.success("successfully found user data", allUserProfile));
-    }
     @PatchMapping
     public ResponseEntity<?> updateProfile(@RequestBody UpdateProfileRequest profileRequest, @AuthenticationPrincipal CustomUserDetails userDetails){
         userProfileService.updateUserProfile(profileRequest, userDetails.getUser());

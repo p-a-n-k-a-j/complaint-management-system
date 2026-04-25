@@ -72,10 +72,6 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Password successfully updated"));
     }
 
-    @PatchMapping("/{status}/{id}")
-    public ResponseEntity<?> changeUserStatus(@PathVariable AccountStatus status, @PathVariable Long id, @AuthenticationPrincipal CustomUserDetails userDetails){
-        authService.changeStatus(id, status, userDetails.getId());
-        return ResponseEntity.ok(ApiResponse.success("User accountStatus successfully updated"));
-    }
+
 
 }

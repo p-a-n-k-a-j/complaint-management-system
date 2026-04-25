@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/complaint")
@@ -103,7 +104,11 @@ public class ComplaintController {
         complaintService.updateComplaint(updateRequest, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Complaint updated successfully"));
     }
-
+    @GetMapping("/stats")
+    public ResponseEntity<ApiResponse<?>> getUserStats(@AuthenticationPrincipal CustomUserDetails userDetails){
+        Map<String, Long> userStats = complaintService.getUserStats(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.success("User stats are present", userStats));
+    }
 
 
 }

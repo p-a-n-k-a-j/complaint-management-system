@@ -82,7 +82,7 @@ public class AuthService {
 
     }
 
-    private void updateExistingUserWithNewData(User user, RegisterRequest registerRequest) {
+    public void updateExistingUserWithNewData(User user, RegisterRequest registerRequest) {
         user.setStatus(AccountStatus.ACTIVE);
         user.setRoles(Set.of(UserRole.ROLE_USER));
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
@@ -170,10 +170,10 @@ public class AuthService {
     }
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Transactional
-    public void changeStatus(Long targetId, AccountStatus accountStatus, Long currentUserId ) {
+    public void changeStatus(Long targetId, AccountStatus accountStatus, User currentUser ) {
         User user = authRepository.findById(targetId).orElseThrow(()-> new UserNotFoundException("User not found"));
-       if(currentUserId.equals(targetId)){
-           throw new UnauthorizedActionException("you can't change your status by itself.");
+       if(currentUser.getId().equals(targetId) && !currentUser.getRoles().contains(UserRole.ROLE_SUPER_ADMIN)){
+           throw new UnauthorizedActionException("you are not authorized to take this action.");
        }
         user.setStatus(accountStatus);
     }

@@ -27,7 +27,16 @@ public class ComplaintResponseDTO {
     private String imageUrl;
     private String assignedTo;
     private LocalDateTime resolvedAt;
+    private String resolutionTime;
     private List<ComplaintAttachment> attachments;
+
+    public String getResolutionTime() {
+        return resolutionTime;
+    }
+
+    public void setResolutionTime(String resolutionTime) {
+        this.resolutionTime = resolutionTime;
+    }
 
     public String getNameInitials() {
         return nameInitials;

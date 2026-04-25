@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ComplaintService {
 
@@ -69,7 +70,7 @@ public interface ComplaintService {
      * Assigns a complaint to a specific admin.
      */
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    void assignTo(Long complaintId, Long adminId, User superAdmin);
+     Complaint assignTo(Long complaintId, Long adminId, User superAdmin);
 
     /**
      * Retrieves a paginated list of complaints assigned to the current admin.
@@ -126,5 +127,32 @@ public interface ComplaintService {
      */
     void addAttachments(Long complaintId, List<MultipartFile> files, User user);
 
+    /**
+     * Return All Stats of complaint with count,
+     *  for example,
+     *  PENDING: 0,
+     *  IN_PROGRESS: 3,
+     *  RESOLVED: 4
+     *  TOTAL_WORKLOAD:7
+     *  etc.
+     *
+     * ***/
+
+    @PreAuthorize("hasRole('ADMIN','SUPER_ADMIN')")
+    Map<String, Long> getAdminStats(Long adminId);
+
+
+    /**
+     * Return All Stats of complaint with count for user,
+     *  for example,
+     *  PENDING: 0,
+     *  IN_PROGRESS: 3,
+     *  RESOLVED: 4
+     *  TOTAL_Complaints:7
+     *  etc.
+     *
+     * ***/
+    @PreAuthorize("hasRole('USER', 'SUPER_ADMIN')")
+    Map<String, Long> getUserStats(Long userId);
 }
 
