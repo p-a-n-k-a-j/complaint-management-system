@@ -34,14 +34,12 @@ public class SuperAdminComplaintController {
     private final ComplaintService complaintService;
     private final EmailService emailService;
     private final AuthService authService;
-    private final UserProfileService profileService;
     private final SuperAdminService superAdminService;
     @Autowired
-    public SuperAdminComplaintController(ComplaintService complaintService, EmailService emailService, AuthService authService, UserProfileService profileService, SuperAdminService superAdminService) {
+    public SuperAdminComplaintController(ComplaintService complaintService, EmailService emailService, AuthService authService, SuperAdminService superAdminService) {
         this.complaintService = complaintService;
         this.emailService = emailService;
         this.authService = authService;
-        this.profileService = profileService;
         this.superAdminService = superAdminService;
     }
 
@@ -58,8 +56,8 @@ public class SuperAdminComplaintController {
     public ResponseEntity<ApiResponse<?>> getAllComplaints(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
-            @RequestParam ComplaintStatus status,
-            @RequestParam ComplaintCategory category
+            @RequestParam(required = false) ComplaintStatus status,
+            @RequestParam(required = false) ComplaintCategory category
             ){
         Page<ComplaintResponseDTO> allComplaintsForSuperAdmin = complaintService.getAllComplaintsForSuperAdmin(page, size, status, category);
         return ResponseEntity.ok(ApiResponse.success("All Complaints are here", allComplaintsForSuperAdmin));
@@ -75,7 +73,7 @@ public class SuperAdminComplaintController {
     }
 
 
-    @PostMapping("/complaints/assign/{complaintId}/{adminId}")
+    @PostMapping("/complaints/{complaintId}/assign/admin/{adminId}")
     public ResponseEntity<ApiResponse<?>> assignAdmin(@PathVariable Long complaintId, @PathVariable Long adminId, @AuthenticationPrincipal CustomUserDetails userDetails){
         Complaint complaint = complaintService.assignTo(complaintId, adminId, userDetails.getUser());
         emailService.sendAssignmentEmail(complaint);

@@ -6,8 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class ComplaintUpdateRequest {
-    @NotNull(message = "Id can't be null")
-    private Long id;
+    @NotNull(message = "ComplaintId can't be null")
+    private Long complaintId;
     @NotBlank(message = "Title is required to update")
     private String title;
     @NotBlank(message = "Description is required to update")
@@ -18,12 +18,12 @@ public class ComplaintUpdateRequest {
     @NotNull(message = "Category is required")
     private ComplaintCategory category;
 
-    public Long getId() {
-        return id;
+    public Long getComplaintId() {
+        return complaintId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setComplaintId(Long complaintId) {
+        this.complaintId = complaintId;
     }
 
     public String getTitle() {

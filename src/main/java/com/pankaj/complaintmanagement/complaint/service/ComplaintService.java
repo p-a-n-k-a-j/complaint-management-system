@@ -152,7 +152,7 @@ public interface ComplaintService {
      *  etc.
      *
      * ***/
-    @PreAuthorize("hasRole('USER', 'SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'SUPER_ADMIN')")
     Map<String, Long> getUserStats(Long userId);
 
     void deleteAttachment(Long complaintId, User user);

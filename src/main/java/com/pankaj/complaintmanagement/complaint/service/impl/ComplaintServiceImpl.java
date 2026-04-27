@@ -14,8 +14,6 @@ import com.pankaj.complaintmanagement.entity.*;
 import com.pankaj.complaintmanagement.exception.custom.ComplaintNotFoundException;
 import com.pankaj.complaintmanagement.exception.custom.UnauthorizedActionException;
 import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
-import com.pankaj.complaintmanagement.exception.custom.UserProfileNotFoundException;
-import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,7 +113,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Transactional
     @Override
     public void partialUpdateComplaint(ComplaintRequest request, User currentUser) {
-        Complaint complaint=complaintRepository.findByUserAndId(currentUser, request.getId()).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
+        Complaint complaint=complaintRepository.findByUserAndId(currentUser, request.getComplaintId()).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
 
         // Business Rule: Agar status PENDING nahi hai, toh user edit nahi kar sakta
         if (complaint.getStatus() != ComplaintStatus.PENDING) {
@@ -131,7 +129,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     @Transactional
     @Override
     public void updateComplaint(ComplaintUpdateRequest request, User user){
-        Complaint complaint = complaintRepository.findById(request.getId()).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
+        Complaint complaint = complaintRepository.findById(request.getComplaintId()).orElseThrow(()-> new ComplaintNotFoundException("Complaint not found"));
         if(!Objects.equals(complaint.getUser().getId(), user.getId())){
             throw new UnauthorizedActionException("Sorry ! You are not authorized to perform this action");
         }

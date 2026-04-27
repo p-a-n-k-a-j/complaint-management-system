@@ -1,25 +1,21 @@
 package com.pankaj.complaintmanagement.complaint.dto;
 
-import com.pankaj.complaintmanagement.common.enums.Priority;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
 
 public class ComplaintRequest {
-    private Long id;
+    private Long complaintId;
     private String title;
     private String description;
     private String remark;
     private ComplaintCategory category;
 
 
-    public Long getId() {
-        return id;
+    public Long getComplaintId() {
+        return complaintId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setComplaintId(Long complaintId) {
+        this.complaintId = complaintId;
     }
 
 

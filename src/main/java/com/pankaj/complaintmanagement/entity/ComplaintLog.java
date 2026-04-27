@@ -12,7 +12,7 @@ public class ComplaintLog {
     @ManyToOne
     @JoinColumn(name = "complaint_id")
     private Complaint complaint;
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false)
     private String ticketId;
     @Enumerated(EnumType.STRING)
     private ComplaintStatus previousStatus;
