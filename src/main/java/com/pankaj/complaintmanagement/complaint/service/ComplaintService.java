@@ -138,7 +138,7 @@ public interface ComplaintService {
      *
      * ***/
 
-    @PreAuthorize("hasRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','SUPER_ADMIN')")
     Map<String, Long> getAdminStats(Long adminId);
 
 

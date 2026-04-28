@@ -86,7 +86,7 @@ public class SuperAdminComplaintController {
         emailService.sendRemarkChangeEmail(dto);
         return ResponseEntity.ok(ApiResponse.success("Remark successfully set"));
     }
-    @GetMapping("/complaints/admin/{adminId}")
+    @GetMapping("/complaints/all/assigned/admin/{adminId}")
     public ResponseEntity<ApiResponse<?>> getAssignedComplaint(@RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "5") int size,
                                                                  @PathVariable Long adminId){
@@ -133,17 +133,19 @@ public class SuperAdminComplaintController {
     @GetMapping("/all/user/profiles")
     public ResponseEntity<ApiResponse<?>> getAllUserProfile(
             @RequestParam(defaultValue = "0")int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "5") int size,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        Page<UserDto> usersProfiles = superAdminService.getAllUser(page, size);
+        Page<UserDto> usersProfiles = superAdminService.getAllUser(page, size, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("User profiles found", usersProfiles));
     }
     @GetMapping("/all/admin/profiles")
     public ResponseEntity<ApiResponse<?>> getAllAdminProfile(
             @RequestParam(defaultValue = "0")int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "5") int size,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ){
-        Page<UserDto> adminProfiles = superAdminService.getAllAdmin(page, size);
+        Page<UserDto> adminProfiles = superAdminService.getAllAdmin(page, size, userDetails.getUser());
         return ResponseEntity.ok(ApiResponse.success("Admin profiles found", adminProfiles));
     }
 

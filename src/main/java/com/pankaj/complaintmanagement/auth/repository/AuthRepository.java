@@ -20,4 +20,22 @@ public interface AuthRepository extends JpaRepository<User, Long> {
             "WHERE r = :role",             // Filter lagaya
             countQuery = "SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r = :role")
     Page<User> findAllByRolesWithProfile(@Param("role") UserRole role, Pageable pageable);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.userProfile WHERE :role MEMBER OF u.roles AND u.id <> :currentUserId")
+    Page<User> findAllByRolesWithProfileExcludingSelf(
+            @Param("role") UserRole role,
+            @Param("currentUserId") Long currentUserId,
+            Pageable pageable
+    );
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.userProfile " +
+            "WHERE :role MEMBER OF u.roles " +
+            "AND :excludeRole NOT MEMBER OF u.roles " +
+            "AND u.id <> :currentUserId")
+    Page<User> findAllUsersExcludingAdmins(
+            @Param("role") UserRole role,           // Yahan ROLE_USER bhejenge
+            @Param("excludeRole") UserRole excludeRole, // Yahan ROLE_ADMIN bhejenge
+            @Param("currentUserId") Long currentUserId,
+            Pageable pageable
+    );
 }
