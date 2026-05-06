@@ -76,14 +76,12 @@ public class SuperAdminComplaintController {
     @PostMapping("/complaints/{complaintId}/assign/admin/{adminId}")
     public ResponseEntity<ApiResponse<?>> assignAdmin(@PathVariable Long complaintId, @PathVariable Long adminId, @AuthenticationPrincipal CustomUserDetails userDetails){
         Complaint complaint = complaintService.assignTo(complaintId, adminId, userDetails.getUser());
-        emailService.sendAssignmentEmail(complaint);
         return ResponseEntity.ok(ApiResponse.success("complaint assigned to: "+complaint.getAssignedTo().getUserProfile().getFullName()));
     }
 
     @PatchMapping("/complaints/remark")
     public ResponseEntity<ApiResponse<?>> setRemark(@RequestBody @Valid SetRemarkRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
         ComplaintResponseDTO dto = complaintService.setRemarkToComplaint(request.getComplaintId(), request.getRemark(), userDetails.getUser());
-        emailService.sendRemarkChangeEmail(dto);
         return ResponseEntity.ok(ApiResponse.success("Remark successfully set"));
     }
     @GetMapping("/complaints/all/assigned/admin/{adminId}")
@@ -96,7 +94,6 @@ public class SuperAdminComplaintController {
     @PatchMapping("/complaints/status")
     public ResponseEntity<ApiResponse<?>> changeStatus(@RequestBody @Valid StatusChangeRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
         ComplaintResponseDTO dto = complaintService.updateComplaintStatus(request.getComplaintId(), request.getStatus(), request.getRemark(), userDetails.getUser());
-        emailService.sendComplaintStatusUpdateEmail(dto);
         return ResponseEntity.ok(ApiResponse.success("Status updated to: "+ dto.getStatus()));
     }
 

@@ -3,6 +3,9 @@ package com.pankaj.complaintmanagement.complaint.service.impl;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import com.pankaj.complaintmanagement.common.enums.Priority;
+import com.pankaj.complaintmanagement.common.events.ComplaintAssignedEvent;
+import com.pankaj.complaintmanagement.common.events.RemarkUpdateEvent;
+import com.pankaj.complaintmanagement.common.events.UpdateComplaintStatusEvent;
 import com.pankaj.complaintmanagement.common.services.CloudinaryService;
 import com.pankaj.complaintmanagement.common.services.WebSocketService;
 import com.pankaj.complaintmanagement.complaint.dto.*;
@@ -17,6 +20,7 @@ import com.pankaj.complaintmanagement.exception.custom.UserNotFoundException;
 import com.pankaj.complaintmanagement.util.ComplaintCategory;
 import com.pankaj.complaintmanagement.util.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,14 +45,16 @@ public class ComplaintServiceImpl implements ComplaintService {
    private final CloudinaryService cloudinaryService;
    private final WebSocketService webSocketService;
    private final ComplaintAttachmentRepository attachmentRepository;
+   private final ApplicationEventPublisher eventPublisher;
    @Autowired
-    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, CloudinaryService cloudinaryService, WebSocketService webSocketService, ComplaintAttachmentRepository attachmentRepository) {
+    public ComplaintServiceImpl(AuthRepository authRepository, ComplaintRepository complaintRepository, ComplaintLogRepository complaintLogRepository, CloudinaryService cloudinaryService, WebSocketService webSocketService, ComplaintAttachmentRepository attachmentRepository, ApplicationEventPublisher eventPublisher) {
         this.authRepository = authRepository;
         this.complaintRepository = complaintRepository;
         this.complaintLogRepository = complaintLogRepository;
        this.cloudinaryService = cloudinaryService;
        this.webSocketService = webSocketService;
        this.attachmentRepository = attachmentRepository;
+       this.eventPublisher = eventPublisher;
    }
 
     @Override
@@ -164,6 +170,8 @@ public class ComplaintServiceImpl implements ComplaintService {
            //this goes to admin
            String adminMsg = "New Task: Complaint #" + complaint.getTicketId() + " is assigned to you. Check details and start working.";
            webSocketService.sendPrivateNotification(admin.getEmail(), new WebSocketService.NotificationResponse("Task Assigned", adminMsg, complaint.getTicketId()));
+            User user = complaint.getUser();
+           eventPublisher.publishEvent(new UpdateComplaintStatusEvent(user.getEmail(), user.getUserProfile().getFullName(), remark, newStatus, complaintId ));
        }
 
        if(newStatus == ComplaintStatus.RESOLVED){
@@ -197,6 +205,9 @@ public class ComplaintServiceImpl implements ComplaintService {
         ComplaintLog complaintLog = saveLog(complaint, complaint.getStatus(), complaint.getStatus());
       //it sendUpdatedLog will send to this complaint id
         webSocketService.sendUpdatedLog(this.mapToComplaintLogResponseDto(complaintLog));
+
+        //ye event user ko background me remark update ki email bhej dega
+        eventPublisher.publishEvent(new RemarkUpdateEvent(complaint.getUser().getEmail(), remark, complaint.getTicketId()));
         return this.mapToComplaintResponseDto(complaint);
     }
 
@@ -240,6 +251,9 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         ComplaintLog complaintLog = saveLog(complaint, complaint.getStatus(), complaint.getStatus());
         webSocketService.sendUpdatedLog(mapToComplaintLogResponseDto(complaintLog));
+
+        //ye event background me assigned admin email background me bhejega
+        eventPublisher.publishEvent(new ComplaintAssignedEvent(newAdmin.getEmail(), newAdmin.getUserProfile().getFullName(), ticketId, complaint.getUser().getEmail(), complaint.getPriority().name()));
         return complaint;
     }
 

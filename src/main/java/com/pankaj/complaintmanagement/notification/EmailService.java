@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.notification;
 
+import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
 import com.pankaj.complaintmanagement.entity.Complaint;
 import org.simplejavamail.api.email.Email;
@@ -23,7 +24,6 @@ public class EmailService {
     public EmailService(OtpService otpService) {
         this.otpService = otpService;
     }
-
 
 
     public int sendOtpEmail(String recipientEmail){
@@ -58,6 +58,55 @@ public class EmailService {
                 .withHTMLText(message)
                 .buildEmail();
         mailer.sendMail(email);
+    }
+    public String getBlockEmailTemplate(String userName, String reason) {
+        String supportEmail = "noreply.complaintmanagment@gmail.com";
+
+        return "<html>" +
+                "<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>" +
+                "    <div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;'>" +
+                "        <h2 style='color: #d9534f;'>Account Access Restricted</h2>" +
+                "        <p>Hi <strong>" + userName + "</strong>,</p>" +
+                "        <p>This is to inform you that your account on <strong>Complaint Management System</strong> has been blocked by the Administrator.</p>" +
+                "        <div style='background-color: #f9f9f9; padding: 15px; border-left: 5px solid #d9534f; margin: 20px 0;'>" +
+                "            <strong>Reason for blocking:</strong><br>" +
+                reason +
+                "        </div>" +
+                "        <p>If you believe this action was taken in error or you wish to appeal this decision, please click the button below to contact our support team:</p>" +
+                "        <div style='text-align: center; margin: 30px 0;'>" +
+                "            <a href='mailto:" + supportEmail + "?subject=Appeal for Blocked Account: " + userName + "' " +
+                "               style='background-color: #0275d8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>" +
+                "               Connect to Support" +
+                "            </a>" +
+                "        </div>" +
+                "        <p>Regards,<br><strong>Admin Team</strong><br>Complaint Management System</p>" +
+                "        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>" +
+                "        <p style='font-size: 12px; color: #777;'>Note: This is a system-generated email. Please do not reply directly to this address.</p>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
+    public String getActiveEmailTemplate(String userName) {
+        return "<html>" +
+                "<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>" +
+                "    <div style='max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;'>" +
+                "        <h2 style='color: #5cb85c;'>Account Re-Activated!</h2>" + // Green color for success
+                "        <p>Hi <strong>" + userName + "</strong>,</p>" +
+                "        <p>Great news! Your account on the <strong>Complaint Management System</strong> has been successfully re-activated by the Administrator.</p>" +
+                "        <p>You can now log in to your dashboard and continue using our services as usual.</p>" +
+                "        <div style='text-align: center; margin: 30px 0;'>" +
+                "            <a href='http://your-app-url.com/login' " + // Apna login URL daal dena
+                "               style='background-color: #5cb85c; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>" +
+                "               Login Now" +
+                "            </a>" +
+                "        </div>" +
+                "        <p>If you face any issues while logging in, feel free to contact our support team.</p>" +
+                "        <p>Regards,<br><strong>Admin Team</strong><br>Complaint Management System</p>" +
+                "        <hr style='border: 0; border-top: 1px solid #eee; margin: 20px 0;'>" +
+                "        <p style='font-size: 12px; color: #777;'>Note: This is an automated notification.</p>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
     }
     public void sendCustomEmailInPlainText(String recipientEmail, String subject, String message){
         Email email = EmailBuilder.startingBlank()
@@ -208,9 +257,9 @@ public class EmailService {
 
         sendCustomEmailInHtml(recipientEmail, subject, message);
     }
-    public void sendComplaintStatusUpdateEmail(ComplaintResponseDTO dto) {
+    public void sendComplaintStatusUpdateEmail(String recipientEmail, String name, String remark, ComplaintStatus status, Long complaintId) {
 
-        String subject = "Update on Your Complaint #" + dto.getId();
+        String subject = "Update on Your Complaint #" + complaintId;
 
         String message = String.format("""
         <html>
@@ -243,11 +292,11 @@ public class EmailService {
             </div>
         </body>
         </html>
-        """, dto.getName(), dto.getId(), dto.getStatus(), dto.getRemark());
+        """, name, complaintId, status, remark);
 
-        sendCustomEmailInHtml(dto.getEmail(), subject, message);
+        sendCustomEmailInHtml(recipientEmail, subject, message);
     }
-    public void sendRemarkChangeEmail(ComplaintResponseDTO dto) {
+    public void sendRemarkChangeEmail(String recipientEmail, String remark, String ticketId) {
         // 1. HTML Template using Text Block (Java 15+)
         String htmlContent = """
         <div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; text-align: center;">
@@ -263,58 +312,73 @@ public class EmailService {
             <hr style="border: 0; border-top: 1px solid #eee;">
             <p style="font-size: 14px; color: #2ecc71;">Keep tracking your complaint for further updates!</p>
         </div>
-        """.formatted(dto.getRemark(), dto.getTicketId());
+        """.formatted(remark, ticketId);
 
         // 2. Call your email service
-        String subject = "Update on Complaint #" + dto.getTicketId();
-        sendCustomEmailInHtml(dto.getEmail(), subject, htmlContent);
+        String subject = "Update on Complaint #" + ticketId;
+        sendCustomEmailInHtml(recipientEmail, subject, htmlContent);
     }
 
-    public void sendAssignmentEmail(Complaint complaint) {
+    public void sendAssignmentEmail(String adminEmail, String userEmail, String adminName, String ticketId, String priority) {
         String htmlContent = """
-        
-        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; background-color: #ffffff;">
-            <div style="text-align: center; margin-bottom: 20px;">
-                <span style="background-color: #3498db; color: white; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; text-transform: uppercase;">New Task</span>
-                <h2 style="color: #2c3e50; margin-top: 10px;">New Complaint Assigned</h2>
-            </div>
-            
-            <p style="color: #7f8c8d; font-size: 15px; line-height: 1.5;">
-                Hello Admin, <br>
-                A new complaint has been assigned to you by the Super Admin. Please review the details below and take necessary action.
-            </p>
-            
-            <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #3498db;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr>
-                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Ticket ID:</td>
-                        <td style="padding: 5px 0; color: #2c3e50; font-weight: bold;">#%s</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Priority:</td>
-                        <td style="padding: 5px 0; color: #e74c3c; font-weight: bold;">High</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">User Email:</td>
-                        <td style="padding: 5px 0; color: #2c3e50;">%s</td>
-                    </tr>
-                </table>
-            </div>
-
-            <div style="margin-top: 25px; text-align: center;">
-                <a href="http://your-app-url.com/admin/complaints/%s" 
-                   style="background-color: #2ecc71; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                   View Complaint Details
-                </a>
-            </div>
-
-            <p style="font-size: 11px; color: #bdc3c7; margin-top: 30px; text-align: center;">
-                This is an automated system notification. Please do not reply to this email.
-            </p>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span style="background-color: #3498db; color: white; padding: 5px 15px; border-radius: 50px; font-size: 12px; font-weight: bold; text-transform: uppercase;">New Task</span>
+            <h2 style="color: #2c3e50; margin-top: 10px;">New Complaint Assigned</h2>
         </div>
-        """.formatted(complaint.getTicketId(), complaint.getTicketId(), complaint.getUser().getEmail(), complaint.getTicketId());
+        
+        <p style="color: #7f8c8d; font-size: 15px; line-height: 1.5;">
+            Hello %s, <br>
+            A new complaint has been assigned to you by the Super Admin. Please review the details below and take necessary action.
+        </p>
+        
+        <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #3498db;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Ticket ID:</td>
+                    <td style="padding: 5px 0; color: #2c3e50; font-weight: bold;">#%s</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Priority:</td>
+                    <td style="padding: 5px 0; color: #e74c3c; font-weight: bold;">%s</td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">User Email:</td>
+                    <td style="padding: 5px 0; color: #2c3e50;">%s</td>
+                </tr>
+            </table>
+        </div>
 
-        sendCustomEmailInHtml(complaint.getAssignedTo().getEmail(), "New Assignment - Ticket #" + complaint.getTicketId(), htmlContent);
+        <div style="text-align: center; margin-top: 25px;">
+            <a href="http://your-app-url.com/admin/complaints/%s" 
+               style="background-color: #2ecc71; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+               View Complaint Details
+            </a>
+        </div>
+    </div>
+    """.formatted(
+                adminName,
+                ticketId,
+                priority,
+                userEmail,
+                ticketId
+        );
+
+        String userHtml = """
+        <div style="font-family: sans-serif; border: 1px solid #e0e0e0; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto;">
+            <h2 style="color: #2c3e50;">Complaint Update</h2>
+            <p>Hello,</p>
+            <p>Your complaint (Ticket <b>#%s</b>) has been assigned to our support executive <b>%s</b>.</p>
+            <p>Priority: <b>%s</b></p>
+            <p>They will start working on it soon.</p>
+        </div>
+    """.formatted(ticketId, adminName, priority);
+
+        // Admin ko mail
+        sendCustomEmailInHtml(adminEmail, "New Assignment - Ticket #" + ticketId, htmlContent);
+
+        // User ko mail (Ye missing tha!)
+        sendCustomEmailInHtml(userEmail, "Update on your Complaint - Ticket #" + ticketId, userHtml);
     }
 
 }

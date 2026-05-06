@@ -45,7 +45,6 @@ public class AdminComplaintController {
     @PostMapping("/remark")
     public ResponseEntity<ApiResponse<?>> setRemark(@RequestBody @Valid SetRemarkRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
         ComplaintResponseDTO dto = complaintService.setRemarkToComplaint(request.getComplaintId(), request.getRemark(), userDetails.getUser());
-        emailService.sendRemarkChangeEmail(dto);
         return ResponseEntity.ok(ApiResponse.success("Remark set successfully to #"+ request.getComplaintId()));
     }
 
@@ -53,7 +52,6 @@ public class AdminComplaintController {
     @PatchMapping("/status")
     public ResponseEntity<ApiResponse<?>> updateStatus(@RequestBody @Valid StatusChangeRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
         ComplaintResponseDTO dto = complaintService.updateComplaintStatus(request.getComplaintId(), request.getStatus(), request.getRemark(), userDetails.getUser());
-        emailService.sendComplaintStatusUpdateEmail(dto);
      return ResponseEntity.ok(ApiResponse.success("Status changed successfully."));
     }
     @GetMapping("/stats")

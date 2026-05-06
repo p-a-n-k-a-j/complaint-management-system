@@ -21,11 +21,9 @@ import java.util.Map;
 @RequestMapping("api/auth")
 public class AuthController {
     private final AuthService authService;
-    private final EmailService emailService;
     private final OtpService otpService;
     @Autowired
-    AuthController(EmailService emailService, OtpService otpService, AuthService authService){
-        this.emailService = emailService;
+    AuthController(OtpService otpService, AuthService authService){
         this.otpService =otpService;
         this.authService = authService;
     }
@@ -34,7 +32,6 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<?>> registerAccount(@RequestBody @Valid RegisterRequest registerRequest){
     authService.register(registerRequest);
-    emailService.sendRegistrationEmail(registerRequest.getEmail(), registerRequest.getName());
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("User created successfully"));
     }
     @PostMapping("/login")
@@ -55,7 +52,7 @@ public class AuthController {
     }
     @PostMapping("/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody Map<String, String> request){
-        emailService.sendOtpEmail(request.get("email"));
+        authService.sendOtp(request.get("email"));
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success("Otp Sent"));
 
     }
