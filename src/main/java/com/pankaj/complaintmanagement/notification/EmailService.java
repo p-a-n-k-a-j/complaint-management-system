@@ -320,6 +320,7 @@ public class EmailService {
     }
 
     public void sendAssignmentEmail(String adminEmail, String userEmail, String adminName, String ticketId, String priority) {
+
         String htmlContent = """
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; border: 1px solid #e0e0e0; padding: 25px; border-radius: 12px; max-width: 550px; margin: auto; background-color: #ffffff;">
         <div style="text-align: center; margin-bottom: 20px;">
@@ -333,7 +334,7 @@ public class EmailService {
         </p>
         
         <div style="background-color: #f8f9fa; border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #3498db;">
-            <table style="width: 100%; border-collapse: collapse;">
+            <table style="width: 100%%; border-collapse: collapse;">
                 <tr>
                     <td style="padding: 5px 0; color: #7f8c8d; font-size: 14px;">Ticket ID:</td>
                     <td style="padding: 5px 0; color: #2c3e50; font-weight: bold;">#%s</td>
@@ -374,10 +375,7 @@ public class EmailService {
         </div>
     """.formatted(ticketId, adminName, priority);
 
-        // Admin ko mail
         sendCustomEmailInHtml(adminEmail, "New Assignment - Ticket #" + ticketId, htmlContent);
-
-        // User ko mail (Ye missing tha!)
         sendCustomEmailInHtml(userEmail, "Update on your Complaint - Ticket #" + ticketId, userHtml);
     }
 
