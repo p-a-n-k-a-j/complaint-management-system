@@ -257,9 +257,9 @@ public class EmailService {
 
         sendCustomEmailInHtml(recipientEmail, subject, message);
     }
-    public void sendComplaintStatusUpdateEmail(String recipientEmail, String name, String remark, ComplaintStatus status, Long complaintId) {
+    public void sendComplaintStatusUpdateEmail(String recipientEmail, String name, String remark, ComplaintStatus status, String ticketId) {
 
-        String subject = "Update on Your Complaint #" + complaintId;
+        String subject = "Update on Your Complaint #" + ticketId;
 
         String message = String.format("""
         <html>
@@ -292,7 +292,7 @@ public class EmailService {
             </div>
         </body>
         </html>
-        """, name, complaintId, status, remark);
+        """, name, ticketId, status, remark);
 
         sendCustomEmailInHtml(recipientEmail, subject, message);
     }

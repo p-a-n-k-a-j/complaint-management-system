@@ -71,9 +71,9 @@ public class UserNotificationListener {
     @EventListener
     public void handleUpdateComplaintStatusEvent(UpdateComplaintStatusEvent event){
         try{
-        logger.info("Email Service: Status update notification triggered for Complaint ID: {} to [{}].", event.complaintId(), event.recipientEmail());
-        emailService.sendComplaintStatusUpdateEmail(event.recipientEmail(), event.name(), event.remark(), event.status(), event.complaintId());
-        logger.info("Email Service: Status update email sent for Complaint ID: {}.", event.complaintId());
+        logger.info("Email Service: Status update notification triggered for Complaint ID: {} to [{}].", event.ticketId(), event.recipientEmail());
+        emailService.sendComplaintStatusUpdateEmail(event.recipientEmail(), event.name(), event.remark(), event.status(), event.ticketId());
+        logger.info("Email Service: Status update email sent for Complaint ID: {}.", event.ticketId());
         }catch (Exception e) {
             logger.error("Email Service Error: Failed to process notification for [{}]. Error: {}", event.recipientEmail(), e);
         }
