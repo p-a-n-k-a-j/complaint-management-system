@@ -3,6 +3,7 @@ package com.pankaj.complaintmanagement.auth.service;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
+import com.pankaj.complaintmanagement.common.events.SendOtpEvent;
 import com.pankaj.complaintmanagement.common.events.UserBlockAndActiveEvent;
 import com.pankaj.complaintmanagement.common.events.UserRegistrationEvent;
 import com.pankaj.complaintmanagement.entity.User;
@@ -191,5 +192,9 @@ public class AuthService {
         user.setStatus(accountStatus);
 
     eventPublisher.publishEvent(new UserBlockAndActiveEvent(user.getEmail(),user.getUserProfile().getFullName(),"You are crossing your limits", accountStatus ));
+    }
+    public void sendOtp(String email) {
+        //ye background me otp bhej dega.
+        eventPublisher.publishEvent(new SendOtpEvent(email));
     }
 }
