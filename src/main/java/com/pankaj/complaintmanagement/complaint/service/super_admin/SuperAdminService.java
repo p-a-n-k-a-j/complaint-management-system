@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -95,14 +96,14 @@ public class SuperAdminService {
     }
 
 
-    public Page<UserDto> getAllUser(int page, int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-        return authRepository.findAllByRolesWithProfile(UserRole.ROLE_USER, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
+    public Page<UserDto> getAllUser(int page, int size, User current){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("userProfile.fullName").ascending());
+        return authRepository.findAllUsersExcludingAdmins(UserRole.ROLE_USER,UserRole.ROLE_ADMIN, current.getId(),pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
 
-    public Page<UserDto> getAllAdmin(int page, int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fullName").ascending());
-        return authRepository.findAllByRolesWithProfile(UserRole.ROLE_ADMIN, pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
+    public Page<UserDto> getAllAdmin(int page, int size, User currentUser){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("userProfile.fullName").ascending());
+        return authRepository.findAllByRolesWithProfileExcludingSelf(UserRole.ROLE_ADMIN, currentUser.getId(),pageable).map(user -> mapUserTOUserDto(user, user.getUserProfile()));
     }
 
     private UserDto mapUserTOUserDto(User user, UserProfile userProfile){

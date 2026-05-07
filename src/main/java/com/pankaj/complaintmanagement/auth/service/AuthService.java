@@ -3,6 +3,9 @@ package com.pankaj.complaintmanagement.auth.service;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
 import com.pankaj.complaintmanagement.auth.dto.RegisterRequest;
 import com.pankaj.complaintmanagement.auth.repository.AuthRepository;
+import com.pankaj.complaintmanagement.common.events.SendOtpEvent;
+import com.pankaj.complaintmanagement.common.events.UserBlockAndActiveEvent;
+import com.pankaj.complaintmanagement.common.events.UserRegistrationEvent;
 import com.pankaj.complaintmanagement.entity.User;
 import com.pankaj.complaintmanagement.entity.UserProfile;
 import com.pankaj.complaintmanagement.exception.custom.EmailNotVerifiedException;
@@ -16,6 +19,7 @@ import com.pankaj.complaintmanagement.user.repository.UserProfileRepository;
 import com.pankaj.complaintmanagement.util.UserRole;
 import io.jsonwebtoken.Claims;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -36,13 +40,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserProfileRepository userProfileRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
-    public AuthService(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService, UserProfileRepository userProfileRepository) {
+    public AuthService(AuthRepository authRepository, PasswordEncoder passwordEncoder, JwtService jwtService, UserProfileRepository userProfileRepository, ApplicationEventPublisher eventPublisher) {
         this.authRepository = authRepository;
         this.userProfileRepository = userProfileRepository;
         this.passwordEncoder=passwordEncoder;
         this.jwtService = jwtService;
+        this.eventPublisher = eventPublisher;
     }
     @Transactional
     public void register(RegisterRequest registerRequest){
@@ -72,14 +78,19 @@ public class AuthService {
         newUser.setRoles(Set.of(UserRole.ROLE_USER));
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setStatus(AccountStatus.ACTIVE);
-        User save = authRepository.save(newUser);
+
+        User savedUser = authRepository.save(newUser);
 
         UserProfile profile = new UserProfile();
         profile.setFullName(registerRequest.getName());
-        profile.setUser(save);
-        save.setUserProfile(profile);
+        profile.setUser(savedUser);
+        savedUser.setUserProfile(profile);
+
         userProfileRepository.save(profile);
         Verify.clearVerification(registerRequest.getEmail());
+
+        //here we publish the event and event handler handle this and send email in the background
+        eventPublisher.publishEvent(new UserRegistrationEvent(savedUser.getEmail(),savedUser.getUserProfile().getFullName()));
 
     }
 
@@ -92,7 +103,13 @@ public class AuthService {
         userProfile.setUser(user);
         user.setUserProfile(userProfile);
         userProfile.setFullName(registerRequest.getName());
+        user.setUserProfile(userProfile);
         userProfileRepository.save(userProfile);
+        //here we publish the event and event handler handle this and send email in the background
+        eventPublisher.publishEvent(new UserRegistrationEvent(user.getEmail(),registerRequest.getName()));
+
+
+
     }
 
     public Map<String, String> login(String email, String rawPassword) {
@@ -106,6 +123,7 @@ public class AuthService {
         if (user.getStatus() == AccountStatus.DELETED) {
             throw new RuntimeException("Account is deleted.");
         }
+
 
         if (user.getStatus() != AccountStatus.ACTIVE) {
             throw new BadCredentialsException("Account is " + user.getStatus());
@@ -178,5 +196,13 @@ public class AuthService {
            throw new UnauthorizedActionException("you are not authorized to take this action.");
        }
         user.setStatus(accountStatus);
+       //ye event email bhejega background me
+        eventPublisher.publishEvent(new UserBlockAndActiveEvent(user.getEmail(),user.getUserProfile().getFullName(), "You crossing your limits and compromise the privacy policy!", accountStatus));
+
+    }
+
+    public void sendOtp(String email) {
+        //ye background me otp bhej dega.
+        eventPublisher.publishEvent(new SendOtpEvent(email));
     }
 }
