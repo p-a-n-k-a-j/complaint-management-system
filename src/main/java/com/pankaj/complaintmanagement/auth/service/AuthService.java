@@ -72,11 +72,12 @@ public class AuthService {
         newUser.setRoles(Set.of(UserRole.ROLE_USER));
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setStatus(AccountStatus.ACTIVE);
-        authRepository.save(newUser);
+        User save = authRepository.save(newUser);
 
         UserProfile profile = new UserProfile();
         profile.setFullName(registerRequest.getName());
-        profile.setUser(newUser);
+        profile.setUser(save);
+        save.setUserProfile(profile);
         userProfileRepository.save(profile);
         Verify.clearVerification(registerRequest.getEmail());
 
@@ -89,6 +90,7 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         UserProfile userProfile=new UserProfile();
         userProfile.setUser(user);
+        user.setUserProfile(userProfile);
         userProfile.setFullName(registerRequest.getName());
         userProfileRepository.save(userProfile);
     }
