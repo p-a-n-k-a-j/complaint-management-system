@@ -83,6 +83,7 @@ public class AuthService {
         UserProfile profile = new UserProfile();
         profile.setFullName(registerRequest.getName());
         profile.setUser(savedUser);
+        savedUser.setUserProfile(profile);
         userProfileRepository.save(profile);
         Verify.clearVerification(registerRequest.getEmail());
 
@@ -99,6 +100,7 @@ public class AuthService {
         UserProfile userProfile=new UserProfile();
         userProfile.setUser(user);
         userProfile.setFullName(registerRequest.getName());
+        user.setUserProfile(userProfile);
         userProfileRepository.save(userProfile);
         //here we publish the event and event handler handle this and send email in the background
         eventPublisher.publishEvent(new UserRegistrationEvent(user.getEmail(),registerRequest.getName()));
