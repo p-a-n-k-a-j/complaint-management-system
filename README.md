@@ -1,384 +1,501 @@
 # Complaint Management System
 
-A modern Complaint Management System built using Spring Boot that enables secure complaint registration, tracking, assignment, and resolution through a role-based workflow.
+A production-inspired Complaint Management System built with **Spring Boot**, designed around secure authentication, role-based access control, complaint lifecycle management, asynchronous event processing, and real-time notifications.
 
-The system provides authentication, complaint lifecycle management, real-time notifications, profile management, email communication, file attachments, and administrative monitoring capabilities.
+The project demonstrates modern backend engineering practices including:
 
-Designed using a feature-based architecture, the application focuses on scalability, maintainability, and real-world workflow management.
-
----
-
-## 🚀 Key Features
-
-### 🔐 Authentication & Authorization
-
-* JWT-based Authentication
-* Access Token & Refresh Token mechanism
-* Refresh Token Rotation
+* JWT Authentication & Refresh Token Rotation
+* Spring Security
 * Role-Based Access Control (RBAC)
-* Secure Password Hashing
-* Email Verification using OTP
-* Forgot Password & Password Reset
-* Account Status Validation
-
-Supported Account Statuses:
-
-* ACTIVE
-* SUSPENDED
-* BLOCKED
-* DELETED
+* Soft Delete Account Recovery
+* Event-Driven Email Notifications
+* Real-Time WebSocket Updates
+* Cloudinary File Management
+* Dockerized Deployment
+* Feature-Based Architecture
+* Global Exception Handling
+* Pagination & Filtering
+* Transaction Management
 
 ---
 
-### 👤 User Management
+# Architecture Overview
 
-Users can:
-
-* Register and verify their email
-* Login securely
-* Update profile information
-* Upload profile image
-* Remove profile image
-* View own profile
-* Delete account
-* Recover previously deleted account through re-registration
-
-Profile images are managed using Cloudinary.
+```text
+Client
+   |
+   v
+Spring Security Filter Chain
+   |
+   v
+JWT Authentication Filter
+   |
+   v
+Controllers
+   |
+   v
+Services
+   |
+   v
+Repositories
+   |
+   v
+MySQL Database
+```
 
 ---
 
-### 📩 Complaint Management
+# Core Modules
 
-Users can:
+```text
+Authentication
+│
+├── Registration
+├── Login
+├── OTP Verification
+├── Forgot Password
+├── Refresh Token
+└── Account Recovery
 
-* Create complaints
-* Update complaints
-* Delete complaints
-* View complaint details
-* Search complaint by Ticket ID
-* Track complaint status
-* View complaint history
-* View complaint logs
-* Upload attachments
-* Update attachments
-* Delete attachments
-* View complaint statistics
+User Profile
+│
+├── Profile Management
+├── Image Upload
+├── Image Removal
+└── Cloudinary Integration
 
-Supported Complaint Features:
+Complaint Management
+│
+├── Create Complaint
+├── Update Complaint
+├── Track Complaint
+├── Complaint History
+├── Attachments
+└── Complaint Analytics
 
-* Complaint Categories
-* Priority Levels
-* Ticket Tracking
-* Complaint History
-* Status Tracking
-* Remarks
+Administration
+│
+├── Complaint Assignment
+├── Complaint Monitoring
+├── User Monitoring
+├── Status Management
+└── Admin Management
+
+Notification System
+│
+├── Async Email Events
+├── Event Listeners
+└── WebSocket Notifications
+```
+
+---
+
+# Authentication Flow
+
+```text
+User
+ |
+ v
+Send OTP
+ |
+ v
+Verify OTP
+ |
+ v
+Registration Request
+ |
+ v
+Check Existing User
+ |
+ +----------------------------+
+ |                            |
+ | ACTIVE                     |
+ |                            |
+ +--> Registration Blocked
+ |
+ | DELETED
+ |
+ +--> Restore Existing Account
+ |
+ | BLOCKED / SUSPENDED
+ |
+ +--> Registration Blocked
+ |
+ v
+Password Hashing
+ |
+ v
+Create User
+ |
+ v
+Create User Profile
+ |
+ v
+Publish Registration Event
+ |
+ v
+Async Welcome Email
+```
+
+---
+
+# Soft Delete Recovery
+
+One of the key features of this project is **Account Recovery using Soft Delete**.
+
+Instead of permanently deleting user records:
+
+```text
+ACTIVE
+   |
+DELETE
+   |
+   v
+DELETED
+```
+
+When the same user attempts registration again:
+
+```text
+User Exists?
+      |
+      v
+Status = DELETED
+      |
+      v
+Restore Existing Account
+      |
+      v
+Update User Data
+```
+
+This preserves historical records while allowing account recovery.
+
+---
+
+# Login Flow
+
+```text
+User Login
+    |
+    v
+Email Exists?
+    |
+    +--> No -> Invalid Credentials
+    |
+    v
+Account Deleted?
+    |
+    +--> Yes -> Account Deleted
+    |
+    v
+Account Active?
+    |
+    +--> No -> Account Blocked/Suspended
+    |
+    v
+Password Match?
+    |
+    +--> No -> Invalid Credentials
+    |
+    v
+Generate Tokens
+    |
+    +--> Access Token
+    |
+    +--> Refresh Token
+    |
+    v
+Store Refresh Token
+    |
+    v
+Return Tokens
+```
+
+---
+
+# JWT Strategy
+
+### Access Token
+
+Contains:
+
+* Email
+* Roles
+* Authorities
+
+Purpose:
+
+* API Authorization
+
+Expiration:
+
+* Short Lived
+
+---
+
+### Refresh Token
+
+Contains:
+
+* Email
+
+Purpose:
+
+* Generate New Access Token
+
+Expiration:
+
+* Long Lived
+
+Stored in:
+
+* Database
+
+Security:
+
+* Refresh Token Rotation
+* Refresh Token Revocation
+
+---
+
+# Refresh Token Flow
+
+```text
+Refresh Request
+      |
+      v
+Validate Token Type
+      |
+      v
+Load User
+      |
+      v
+Compare DB Refresh Token
+      |
+      +--> Invalid
+      |
+      v
+Generate New Tokens
+      |
+      v
+Replace Old Refresh Token
+      |
+      v
+Return New Tokens
+```
+
+---
+
+# Entity Relationship Diagram
+
+```text
+User
+ |
+ | One-To-One
+ |
+ v
+UserProfile
+
+User
+ |
+ | One-To-Many
+ |
+ v
+Complaint
+
+Complaint
+ |
+ | One-To-Many
+ |
+ v
+ComplaintLog
+
+Complaint
+ |
+ | One-To-Many
+ |
+ v
+ComplaintAttachment
+```
+
+---
+
+# Complaint Lifecycle
+
+```text
+User Creates Complaint
+           |
+           v
+Ticket Generated
+           |
+           v
+Complaint Submitted
+           |
+           v
+Assigned To Admin
+           |
+           v
+In Progress
+           |
+           v
+Resolved
+           |
+           v
+History Preserved
+```
+
+---
+
+# Complaint Tracking
+
+Each complaint maintains:
+
+* Unique Ticket ID
+* Complaint Logs
+* Status History
+* Admin Actions
 * Attachments
+* Resolution Information
 
 ---
 
-### 👨‍💼 Admin Operations
+# Real-Time Notifications
 
-Admins can:
+WebSocket notifications are used for:
 
-* View assigned complaints
-* Update complaint status
-* Add remarks
-* View workload statistics
-* View today's assigned updates
+### Complaint Assignment
 
----
+```text
+Super Admin
+     |
+Assign Complaint
+     |
+     +--> Notify Assigned Admin
+     |
+     +--> Notify User
+```
 
-### 👑 Super Admin Operations
+### Complaint Status Change
 
-Super Admins can:
-
-* View all complaints
-* Assign complaints to admins
-* Reassign complaints
-* Monitor user activity
-* Monitor admin performance
-* Manage user account status
-* Convert users into admins
-* Register new admins
-* View user statistics
-* View admin statistics
-
----
-
-### 🔔 Real-Time Notifications
-
-The application uses WebSocket-based communication for real-time updates.
-
-Notifications are triggered when:
-
-* Complaint status changes
-* Complaint gets assigned
-* Complaint gets reassigned
-* Administrative actions occur
-
-This allows users and administrators to receive updates instantly without refreshing the application.
+```text
+Admin
+   |
+Update Status
+   |
+   v
+User Notification
+```
 
 ---
 
-### 📧 Email Notification System
+# File Management
 
-The application provides automated email communication for:
+Cloudinary is used for:
 
-* Email Verification
-* Welcome Emails
-* Password Reset
-* Account Status Updates
-* Admin Registration
-* Account Reactivation
+### User Profile Images
 
-Email processing is performed asynchronously using:
+* Upload Image
+* Update Image
+* Remove Image
+
+### Complaint Attachments
+
+* Upload Evidence
+* Replace Attachments
+* Remove Attachments
+
+---
+
+# Event Driven Email System
+
+The project uses:
 
 * ApplicationEventPublisher
 * Event Listeners
-* @Async Processing
+* Async Processing
 
-This prevents users from waiting for email operations to complete before receiving responses.
+Purpose:
 
----
-
-## 🏗 System Architecture
-
-The project follows a feature-based architecture.
-
-Modules include:
-
-* Authentication
-* User Profile
-* Complaints
-* Email Events
-* Notifications
-* Security
-* Exception Handling
-
-Benefits:
-
-* Better separation of concerns
-* Easier maintenance
-* Scalable code organization
-* Independent feature development
-
----
-
-## 🔄 Authentication Flow
-
-### Registration
-
+```text
 User Registration
+      |
+Publish Event
+      |
+      v
+Background Email Processing
+      |
+      v
+Immediate API Response
+```
 
-↓
-
-Email OTP Verification
-
-↓
-
-Account Status Validation
-
-↓
-
-Password Encryption
-
-↓
-
-User Creation
-
-↓
-
-User Profile Creation
-
-↓
-
-Welcome Email Event
-
-↓
-
-Registration Successful
-
-### Login
-
-Email + Password
-
-↓
-
-Credential Validation
-
-↓
-
-Account Status Validation
-
-↓
-
-Access Token Generation
-
-↓
-
-Refresh Token Generation
-
-↓
-
-Refresh Token Persistence
-
-↓
-
-Authentication Successful
-
-### Refresh Token Flow
-
-Refresh Token
-
-↓
-
-Token Validation
-
-↓
-
-Database Verification
-
-↓
-
-Refresh Token Rotation
-
-↓
-
-New Access Token
-
-↓
-
-New Refresh Token
+The user does not wait for email delivery before receiving the API response.
 
 ---
 
-## 📋 Complaint Lifecycle
-
-Complaint Created
-
-↓
-
-Status: PENDING
-
-↓
-
-Assigned by Super Admin
-
-↓
-
-Handled by Admin
-
-↓
-
-Status Updates
-
-↓
-
-Complaint Logs Generated
-
-↓
-
-Real-Time Notifications
-
-↓
-
-RESOLVED
-
----
-
-## 🗄 Database Design
-
-### Entity Relationships
-
-User
-
-↔ One-to-One ↔ UserProfile
-
-User
-
-↔ One-to-Many ↔ Complaint
-
-Complaint
-
-↔ One-to-Many ↔ ComplaintLog
-
-Complaint
-
-↔ One-to-Many ↔ ComplaintAttachment
-
----
-
-## ☁ File Management
-
-Profile images and complaint attachments are stored using Cloudinary.
-
-Stored Metadata:
-
-* File URL
-* Public ID
-
-Supported Operations:
-
-* Upload
-* Update
-* Delete
-
----
-
-## ⚙️ Technical Highlights
+# Security Features
 
 * Spring Security
 * JWT Authentication
-* Refresh Token Management
-* WebSocket Integration
-* Cloudinary Integration
-* Async Event Processing
-* DTO-based Communication
-* Transaction Management
-* Global Exception Handling
-* Pagination Support
-* Validation Support
-* Role-Based Access Control
+* Refresh Token Rotation
+* Password Encryption
+* Role-Based Authorization
+* Endpoint Protection
+* Method Level Security
+* Secure OTP Verification
 
 ---
 
-## 🌳 Git Workflow
+# Role Hierarchy
 
-The project follows a feature branch strategy.
+```text
+SUPER_ADMIN
+      |
+      +--> Manage Users
+      |
+      +--> Manage Admins
+      |
+      +--> Assign Complaints
+      |
+      +--> Monitor System
 
-### Branches
+ADMIN
+      |
+      +--> Handle Assigned Complaints
+      |
+      +--> Update Complaint Status
 
-#### main
-
-Production-ready code.
-
-#### feature/auth
-
-Authentication and authorization implementation.
-
-#### feature/user-profile
-
-User profile management.
-
-#### feature/complaint
-
-Complaint handling and workflow implementation.
-
-#### feature/async-events
-
-Asynchronous email processing and event-driven communication.
-
-#### feature/global-exception-handler
-
-Centralized exception handling.
-
-#### feature/docker-setup
-
-Docker and Docker Compose configuration.
+USER
+      |
+      +--> Create Complaint
+      |
+      +--> Track Complaint
+      |
+      +--> Manage Profile
+```
 
 ---
 
-## 🛠 Tech Stack
+# Branching Strategy
+
+Feature-based branching strategy was followed throughout development.
+
+```text
+main
+
+├── feature/auth
+├── feature/user-profile
+├── feature/complaint
+├── feature/async-events
+├── feature/global-exception-handler
+└── feature/docker-setup
+```
+
+This structure helps isolate development work and keeps the main branch stable.
+
+---
+
+# Technology Stack
 
 ### Backend
 
@@ -390,7 +507,7 @@ Docker and Docker Compose configuration.
 
 ### Database
 
-* PostgreSQL / MySQL
+* MySQL
 
 ### Authentication
 
@@ -401,40 +518,53 @@ Docker and Docker Compose configuration.
 
 * WebSocket
 
-### File Storage
+### Cloud Storage
 
 * Cloudinary
-
-### Email Service
-
-* Java Mail
-* SMTP
 
 ### DevOps
 
 * Docker
 * Docker Compose
 
----
+### Email
 
-## 🔮 Future Enhancements
-
-* Redis Integration for OTP & Caching
-* Background Email Queue Processing
-* Dedicated Chat System
-* Audit Logging
-* Analytics Dashboard
-* Rate Limiting
-* API Monitoring
-* Microservice Migration
+* Java Mail
+* Async Event Processing
 
 ---
 
-## 👨‍💻 Developer
+# API Documentation
 
-Pankaj Tirdiya
+Detailed API documentation will be added here.
+
+```text
+Authentication APIs
+User Profile APIs
+Complaint APIs
+Admin APIs
+Super Admin APIs
+Notification APIs
+```
+
+---
+
+# Future Enhancements
+
+* Redis Caching
+* Background Complaint Analytics
+* Scheduled Reports
+* Audit Dashboard
+* API Rate Limiting
+* Monitoring & Metrics
+* CI/CD Pipeline
+
+---
+
+## Developed By
+
+**Pankaj Tirdiya**
 
 Java Backend Developer
 
-GitHub:
-https://github.com/p-a-n-k-a-j
+GitHub: https://github.com/p-a-n-k-a-j
