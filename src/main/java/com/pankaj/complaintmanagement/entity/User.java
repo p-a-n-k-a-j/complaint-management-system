@@ -24,7 +24,7 @@ public class User {
             name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id")
     )
-    @Column(name = "role_name") // Enum ki value is column me jayegi
+    @Column(name = "roles") // Enum ki value is column me jayegi
     @Enumerated(EnumType.STRING)
     private Set<UserRole> roles;
     @Enumerated(EnumType.STRING)
