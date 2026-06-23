@@ -6,33 +6,33 @@ services:
     container_name: springboot_app
     ports:
       - "8080:8080"
-    depends_on:
-      - db
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      JWT_SECRET: "ajdlfjsdfhoweoriuweralsjfowerhlhaskdfjlkeiurpoweuriou;asjfjfjlkaflkja;fkvznx,n"
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/cms
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: "@pankaj123"
-    networks:
-      - app-network
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?ssl-mode=REQUIRED
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
 
-  db:
-    image: mysql:8
-    container_name: mysql-db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: "@pankaj123"
-      MYSQL_DATABASE: cms
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
-volumes:
-  mysql_data:
-
-networks:
-  app-network:
+      #sorry ab mujhe yeh nhi chahiye because my database is now on cloud
+#    networks:
+#      - app-network
+#
+#  db:
+#    image: mysql:8
+#    container_name: mysql-db
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: Your Password
+#      MYSQL_DATABASE: yourDB NAME
+#    ports:
+#      - "3307:3306"
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    networks:
+#      - app-network
+#
+#volumes:
+#  mysql_data:
+#
+#networks:
+#  app-network:
