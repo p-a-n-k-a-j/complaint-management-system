@@ -13,11 +13,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     private static final String CONSTANT_FROM = "Complaint Management Team";
-    private static final String CONSTANT_FROM_EMAIL="noreply.complaintmanagement@gmail.com";
-    private static final String APP_PASSWORD="grqj xepm fjzs xabv";
+    // 1. Direct System.getenv() se values read karo
+    private static final String CONSTANT_FROM_EMAIL = System.getenv("EMAIL");
+    private static final String APP_PASSWORD = System.getenv("APP_PASSWORD");
+    private static final String SMTP_HOST = System.getenv("SMTP_HOST");
+    // Port number String hota hai env me, isliye use Integer.parseInt karna padega
+    private static final int SMTP_PORT = Integer.parseInt(System.getenv("SMTP_PORT"));
 
     private static final Mailer mailer = MailerBuilder
-            .withSMTPServer("smtp.gmail.com" , 587, CONSTANT_FROM_EMAIL, APP_PASSWORD.trim())
+            .withSMTPServer(SMTP_HOST , SMTP_PORT, CONSTANT_FROM_EMAIL, APP_PASSWORD.trim())
             .withTransportStrategy(TransportStrategy.SMTP_TLS)
             .buildMailer();
     private OtpService otpService;
