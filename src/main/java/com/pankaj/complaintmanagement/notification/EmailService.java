@@ -13,15 +13,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     private static final String CONSTANT_FROM = "Complaint Management Team";
-    // 1. Direct System.getenv() se values read karo
-    private static final String CONSTANT_FROM_EMAIL = System.getenv("EMAIL");
-    private static final String APP_PASSWORD = System.getenv("APP_PASSWORD");
-    private static final String SMTP_HOST = System.getenv("SMTP_HOST");
-    // Port number String hota hai env me, isliye use Integer.parseInt karna padega
-    private static final int SMTP_PORT = System.getenv("SMTP_PORT") != null ?
-            Integer.parseInt(System.getenv("SMTP_PORT").trim()) : 587;
+
+    // Safe loading variables from Env
+    private static final String CONSTANT_FROM_EMAIL = System.getenv("EMAIL") != null ? System.getenv("EMAIL") : "";
+    private static final String APP_PASSWORD = System.getenv("APP_PASSWORD") != null ? System.getenv("APP_PASSWORD") : "";
+    private static final String SMTP_HOST = System.getenv("SMTP_HOST") != null ? System.getenv("SMTP_HOST") : "smtp-relay.brevo.com";
+    private static final int SMTP_PORT = System.getenv("SMTP_PORT") != null ? Integer.parseInt(System.getenv("SMTP_PORT")) : 587;
+
     private static final Mailer mailer = MailerBuilder
-            .withSMTPServer(SMTP_HOST , SMTP_PORT, CONSTANT_FROM_EMAIL, APP_PASSWORD.trim())
+            // .trim() hata kar direct variable pass kiya kyunki humne upar null check handle kar liya hai
+            .withSMTPServer(SMTP_HOST, SMTP_PORT, CONSTANT_FROM_EMAIL, APP_PASSWORD)
             .withTransportStrategy(TransportStrategy.SMTP_TLS)
             .buildMailer();
     private OtpService otpService;
