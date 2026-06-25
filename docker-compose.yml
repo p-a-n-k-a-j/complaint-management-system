@@ -12,7 +12,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?ssl-mode=REQUIRED
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-
+      EMAIL: ${EMAIL}
+      APP_PASSWORD: ${APP_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
       #sorry ab mujhe yeh nhi chahiye because my database is now on cloud
 #    networks:
 #      - app-network
