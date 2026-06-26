@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     private final Mailer mailer;
-    private  EmailProperties properties;
-    private OtpService otpService;
+    private final EmailProperties properties;
+    private final OtpService otpService;
     @Autowired
     public EmailService(OtpService otpService, EmailProperties properties) {
         this.otpService = otpService;
@@ -25,6 +25,7 @@ public class EmailService {
                 properties.getPassword()
         ).withTransportStrategy(TransportStrategy.SMTP_TLS)
                 .buildMailer();
+        this.properties = properties;
     }
 
 
