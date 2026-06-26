@@ -1,33 +1,30 @@
 package com.pankaj.complaintmanagement.notification;
 
 import com.pankaj.complaintmanagement.common.enums.ComplaintStatus;
-import com.pankaj.complaintmanagement.complaint.dto.ComplaintResponseDTO;
-import com.pankaj.complaintmanagement.entity.Complaint;
+import com.pankaj.complaintmanagement.notification.config.EmailProperties;
 import org.simplejavamail.api.email.Email;
 import org.simplejavamail.api.mailer.Mailer;
 import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class EmailService {
-    private static final String CONSTANT_FROM = "Complaint Management Team";
-
-    // Safe loading variables from Env
-    private static final String CONSTANT_FROM_EMAIL = System.getenv("EMAIL") != null ? System.getenv("EMAIL") : "";
-    private static final String APP_PASSWORD = System.getenv("APP_PASSWORD") != null ? System.getenv("APP_PASSWORD") : "";
-    private static final String SMTP_HOST = System.getenv("SMTP_HOST") != null ? System.getenv("SMTP_HOST") : "smtp-relay.brevo.com";
-    private static final int SMTP_PORT = System.getenv("SMTP_PORT") != null ? Integer.parseInt(System.getenv("SMTP_PORT")) : 587;
-
-    private static final Mailer mailer = MailerBuilder
-            // .trim() hata kar direct variable pass kiya kyunki humne upar null check handle kar liya hai
-            .withSMTPServer(SMTP_HOST, SMTP_PORT, CONSTANT_FROM_EMAIL, APP_PASSWORD)
-            .withTransportStrategy(TransportStrategy.SMTP_TLS)
-            .buildMailer();
+    private final Mailer mailer;
+    private  EmailProperties properties;
     private OtpService otpService;
-    public EmailService(OtpService otpService) {
+    @Autowired
+    public EmailService(OtpService otpService, EmailProperties properties) {
         this.otpService = otpService;
+        this.mailer= MailerBuilder.withSMTPServer(
+                properties.getSmtp().getHost(),
+                properties.getSmtp().getPort(),
+                properties.getSmtp().getUsername(),
+                properties.getPassword()
+        ).withTransportStrategy(TransportStrategy.SMTP_TLS)
+                .buildMailer();
     }
 
 
@@ -42,10 +39,9 @@ public class EmailService {
                 "<p>This code is valid for 5 minutes. Do not share it.</p>";
 
         Email email = EmailBuilder.startingBlank()
-                .from(CONSTANT_FROM, CONSTANT_FROM_EMAIL)
+                .from(properties.getSender().getName(), properties.getUsername())
                 .to(recipientEmail)
                 .withSubject(subject)
-                .withReplyTo(recipientEmail)
                 .withHTMLText(htmlMessage)
                 .buildEmail();
         mailer.sendMail(email);
@@ -56,10 +52,9 @@ public class EmailService {
 
     public void sendCustomEmailInHtml(String recipientEmail, String subject, String message){
         Email email = EmailBuilder.startingBlank()
-                .from(CONSTANT_FROM, CONSTANT_FROM_EMAIL)
+                .from(properties.getSender().getName(), properties.getUsername())
                 .to(recipientEmail)
                 .withSubject(subject)
-                .withReplyTo(recipientEmail)
                 .withHTMLText(message)
                 .buildEmail();
         mailer.sendMail(email);
@@ -115,10 +110,9 @@ public class EmailService {
     }
     public void sendCustomEmailInPlainText(String recipientEmail, String subject, String message){
         Email email = EmailBuilder.startingBlank()
-                .from(CONSTANT_FROM, CONSTANT_FROM_EMAIL)
+                .from(properties.getSender().getName(), properties.getUsername())
                 .to(recipientEmail)
                 .withSubject(subject)
-                .withReplyTo(recipientEmail)
                 .withPlainText(message)
                 .buildEmail();
         mailer.sendMail(email);
