@@ -1,5 +1,6 @@
 # --- My Custom Ignores ---
 src/main/resources/application.properties
+.env
 /uploads/
 
 # --- IntelliJ IDEA ---
