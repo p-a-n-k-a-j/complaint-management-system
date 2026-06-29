@@ -166,10 +166,10 @@ public class ComplaintServiceImpl implements ComplaintService {
            complaint.setAssignedTo(admin);
            String userMsg = "Good news! Your complaint #" + complaint.getTicketId() + " has been assigned to " + admin.getUserProfile().getFullName() + ". We're on it!";
           //this goes to user
-           webSocketService.sendPrivateNotification(complaint.getUser().getEmail(), new WebSocketService.NotificationResponse("Ticket Assigned", userMsg, complaint.getTicketId()));
+           webSocketService.sendPrivateNotification(complaint.getUser().getEmail(), new WebSocketService.NotificationResponse("Ticket Assigned", userMsg, complaint.getTicketId(), LocalDateTime.now()));
            //this goes to admin
            String adminMsg = "New Task: Complaint #" + complaint.getTicketId() + " is assigned to you. Check details and start working.";
-           webSocketService.sendPrivateNotification(admin.getEmail(), new WebSocketService.NotificationResponse("Task Assigned", adminMsg, complaint.getTicketId()));
+           webSocketService.sendPrivateNotification(admin.getEmail(), new WebSocketService.NotificationResponse("Task Assigned", adminMsg, complaint.getTicketId(),LocalDateTime.now()));
             User user = complaint.getUser();
            eventPublisher.publishEvent(new UpdateComplaintStatusEvent(user.getEmail(), user.getUserProfile().getFullName(), remark, newStatus, complaint.getTicketId() ));
        }
@@ -187,7 +187,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         //ye user ko notify karne ke liye private endpoint
 
         String statusChangeMessage="Good news! Your complaint #" + complaint.getTicketId() + "  newStatus has been changed to " + newStatus + ". We're on it!";
-        webSocketService.sendPrivateNotification(complaint.getUser().getEmail(), new WebSocketService.NotificationResponse("STATUS_UPDATED", statusChangeMessage, complaint.getTicketId()));
+        webSocketService.sendPrivateNotification(complaint.getUser().getEmail(), new WebSocketService.NotificationResponse("STATUS_UPDATED", statusChangeMessage, complaint.getTicketId(), LocalDateTime.now()));
        //here I publish status update event to user
         eventPublisher.publishEvent(new UpdateComplaintStatusEvent(complaint.getUser().getEmail(), complaint.getUser().getUserProfile().getFullName(), complaint.getRemark(), newStatus, complaint.getTicketId() ));
         return this.mapToComplaintResponseDto(complaint);
@@ -241,14 +241,14 @@ public class ComplaintServiceImpl implements ComplaintService {
         // 2. Notify User (Single Notification)
         webSocketService.sendPrivateNotification(
                 complaint.getUser().getEmail(),
-                new WebSocketService.NotificationResponse("TICKET_ASSIGNED", userMsg, ticketId)
+                new WebSocketService.NotificationResponse("TICKET_ASSIGNED", userMsg, ticketId, LocalDateTime.now())
         );
 
         // 3. Notify the New Admin
         String adminMsg = "New Task: Complaint #" + ticketId + " is assigned to you. Check details and start working.";
         webSocketService.sendPrivateNotification(
                 newAdmin.getEmail(),
-                new WebSocketService.NotificationResponse("TASK_ASSIGNED", adminMsg, ticketId)
+                new WebSocketService.NotificationResponse("TASK_ASSIGNED", adminMsg, ticketId, LocalDateTime.now())
         );
 
         ComplaintLog complaintLog = saveLog(complaint, complaint.getStatus(), complaint.getStatus());

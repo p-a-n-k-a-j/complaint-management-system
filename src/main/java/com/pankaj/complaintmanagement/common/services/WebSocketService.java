@@ -3,6 +3,9 @@ package com.pankaj.complaintmanagement.common.services;
 import com.pankaj.complaintmanagement.complaint.dto.ComplaintLogResponseDTO;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
 /***
  * this service is responsible to do all websocket related work:
  * for now I keep it simple and use for sending complaint logs or notification.
@@ -33,6 +36,7 @@ public class WebSocketService {
     public record NotificationResponse(
             String title,
             String message,
-            String ticketId
+            String ticketId,
+            LocalDateTime createdAt
     ){}
 }
