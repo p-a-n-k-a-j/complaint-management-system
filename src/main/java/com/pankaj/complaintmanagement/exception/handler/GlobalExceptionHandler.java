@@ -2,6 +2,10 @@ package com.pankaj.complaintmanagement.exception.handler;
 
 import com.pankaj.complaintmanagement.exception.custom.*;
 import com.pankaj.complaintmanagement.exception.payload.ErrorResponse;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +14,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.security.SignatureException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,7 +30,14 @@ public class GlobalExceptionHandler {
        return buildErrorResponseEntity(request, ex, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler({UnauthorizedActionException.class,BadCredentialsException.class})
+    @ExceptionHandler({UnauthorizedActionException.class,BadCredentialsException.class,
+            ExpiredJwtException.class,
+            MalformedJwtException.class,
+            SignatureException.class,
+            UnsupportedJwtException.class,
+            IllegalArgumentException.class,
+            JwtException.class
+    })
     public ResponseEntity<ErrorResponse> handleUnauthorized(HttpServletRequest request, RuntimeException ex){
      return buildErrorResponseEntity(request, ex, HttpStatus.UNAUTHORIZED);
     }
