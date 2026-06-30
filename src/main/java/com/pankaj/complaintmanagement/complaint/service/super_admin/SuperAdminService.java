@@ -121,7 +121,7 @@ public class SuperAdminService {
                 .status(user.getStatus())
                 .imageUrl((userProfile.getImageUrl() !=null && !userProfile.getImageUrl().isBlank())? userProfile.getImageUrl(): null)
                 .bio(userProfile.getBio())
-                .publicId(userProfile.getPublicId())
+                .gender(userProfile.getGender())
                 .pinCode(userProfile.getPinCode())
                 .build();
 
