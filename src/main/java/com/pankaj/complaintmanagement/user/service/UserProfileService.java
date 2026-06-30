@@ -65,8 +65,8 @@ public class UserProfileService {
                 .status(user.getStatus())
                 .imageUrl((userProfile.getImageUrl() !=null && !userProfile.getImageUrl().isBlank())? userProfile.getImageUrl(): null)
                 .bio(userProfile.getBio())
-                .publicId(userProfile.getPublicId())
                 .pinCode(userProfile.getPinCode())
+                .gender(userProfile.getGender())
                 .build();
 
 

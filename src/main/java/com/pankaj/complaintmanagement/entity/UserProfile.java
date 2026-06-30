@@ -1,5 +1,6 @@
 package com.pankaj.complaintmanagement.entity;
 
+import com.pankaj.complaintmanagement.common.enums.Gender;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +17,7 @@ public class UserProfile {
         private User user;
 
         private String fullName;
-        private Long phone;
+        private String phone;
         private String address;
         private String city;
         private String state;
@@ -24,6 +25,9 @@ public class UserProfile {
         private String imageUrl;
         @Column(columnDefinition = "TEXT" )
         private String bio;
+        @Enumerated(EnumType.STRING)
+        private Gender gender;
+
         private String publicId;
         private LocalDateTime lastUpdate;
 
@@ -35,7 +39,13 @@ public class UserProfile {
         this.publicId = publicId;
     }
 
+    public Gender getGender() {
+        return gender;
+    }
 
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
 
     public Long getId() {
         return id;
@@ -61,11 +71,11 @@ public class UserProfile {
         this.fullName = fullName;
     }
 
-    public Long getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Long phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 
