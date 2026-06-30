@@ -1,17 +1,27 @@
 package com.pankaj.complaintmanagement.user.dto;
 
+import com.pankaj.complaintmanagement.common.enums.Gender;
 import org.springframework.web.multipart.MultipartFile;
 
 public class UpdateProfileRequest {
 
     private String name;
-    private Long phone;
+    private String phone;
     private String address;
     private String city;
     private String state;
     private int pinCode;
     private MultipartFile image;
     private String bio;
+    private Gender gender;
+
+    public Gender getGender() {
+        return gender;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
 
     public MultipartFile getImage() {
         return image;
@@ -29,11 +39,11 @@ public class UpdateProfileRequest {
         this.name = name;
     }
 
-    public Long getPhone() {
+    public String getPhone() {
         return phone;
     }
 
-    public void setPhone(Long phone) {
+    public void setPhone(String phone) {
         this.phone = phone;
     }
 

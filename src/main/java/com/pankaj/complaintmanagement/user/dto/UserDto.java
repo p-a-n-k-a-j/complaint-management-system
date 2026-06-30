@@ -2,6 +2,7 @@ package com.pankaj.complaintmanagement.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.pankaj.complaintmanagement.common.enums.AccountStatus;
+import com.pankaj.complaintmanagement.common.enums.Gender;
 import com.pankaj.complaintmanagement.util.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,14 +28,15 @@ public class UserDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy hh:mm:ss")
     private final LocalDateTime updatedAt;
     @NotBlank(message = "phone number is required")
-    private Long phone;
+    private String phone;
     private String address;
     private String city;
     private String state;
     private int pinCode;
     private String imageUrl;
     private String bio;
-    private String publicId;
+    private Gender gender;
+
 
 
 
@@ -53,10 +55,7 @@ public class UserDto {
         this.imageUrl = builder.imageUrl;
         this.bio = builder.bio;
         this.updatedAt = builder.updatedAt;
-        this.publicId = builder.publicId;
-    }
-    public String getPublicId() {
-        return publicId;
+        this.gender = builder.gender;
     }
     public  Long getId() {
         return id;
@@ -86,7 +85,7 @@ public class UserDto {
         return updatedAt;
     }
 
-    public  Long getPhone() {
+    public  String getPhone() {
         return phone;
     }
 
@@ -114,6 +113,10 @@ public class UserDto {
         return bio;
     }
 
+    public Gender getGender() {
+        return gender;
+    }
+
     public static class Builder{
         private Long id;
         private String name;
@@ -121,15 +124,15 @@ public class UserDto {
         private Set<UserRole> roles;
         private AccountStatus status;
         private LocalDateTime createdAt;
-        private Long phone;
+        private String phone;
         private String address;
         private String city;
         private String state;
         private int pinCode;
         private String imageUrl;
         private String bio;
-        private String publicId;
         private LocalDateTime updatedAt;
+        private Gender gender;
         public Builder updatedAt(LocalDateTime updatedAt){
             this.updatedAt = updatedAt;
             return this;
@@ -148,6 +151,10 @@ public class UserDto {
             this.email = email;
             return this;
         }
+        public Builder gender(Gender gender){
+            this.gender = gender;
+            return this;
+        }
 
         public Builder roles(Set<UserRole> roles) {
             this.roles = roles;
@@ -164,7 +171,7 @@ public class UserDto {
             return this;
         }
 
-        public Builder phone(Long phone) {
+        public Builder phone(String phone) {
             this.phone = phone;
             return this;
         }
@@ -202,9 +209,6 @@ public class UserDto {
             return new UserDto(this);
         }
 
-        public Builder publicId(String publicId) {
-            this.publicId = publicId;
-            return this;
-        }
+
     }
 }
