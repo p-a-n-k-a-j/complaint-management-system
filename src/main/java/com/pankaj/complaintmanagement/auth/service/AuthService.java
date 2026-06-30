@@ -83,6 +83,7 @@ public class AuthService {
 
         UserProfile profile = new UserProfile();
         profile.setFullName(registerRequest.getName());
+        profile.setGender(registerRequest.getGender());
         profile.setUser(savedUser);
         savedUser.setUserProfile(profile);
 

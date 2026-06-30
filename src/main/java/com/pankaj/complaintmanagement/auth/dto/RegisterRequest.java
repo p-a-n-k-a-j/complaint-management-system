@@ -1,9 +1,9 @@
 package com.pankaj.complaintmanagement.auth.dto;
 
-import com.pankaj.complaintmanagement.util.UserRole;
+import com.pankaj.complaintmanagement.common.enums.Gender;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Set;
 
@@ -14,8 +14,16 @@ public class RegisterRequest {
     private String email;
     @NotBlank(message = "password is mandatory! it can't be empty")
     private String password;
+    @NotNull(message = "Gender is required")
+    private Gender gender;
 
+    public Gender getGender() {
+        return gender;
+    }
 
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
 
     public String getName() {
         return name;
