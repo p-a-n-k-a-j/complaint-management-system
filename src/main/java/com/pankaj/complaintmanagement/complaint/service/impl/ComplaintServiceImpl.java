@@ -58,7 +58,7 @@ public class ComplaintServiceImpl implements ComplaintService {
    }
 
     @Override
-    public void createComplaint(ComplaintRequest request, User user) {
+    public Long createComplaint(ComplaintRequest request, User user) {
         User foundUser =authRepository.findById(user.getId()).orElseThrow(()-> new UserNotFoundException("user not found"));
       String ticketId="";
         do{
@@ -80,7 +80,9 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         this.saveLog(complaint, null, ComplaintStatus.PENDING);
 
-        complaintRepository.save(complaint);
+        Complaint save = complaintRepository.save(complaint);
+        return save.getId();
+
 
     }
     //TODO: here are present those two spacial method that are handle attachments for user

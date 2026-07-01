@@ -65,8 +65,8 @@ public class ComplaintController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> createComplaint(@RequestBody ComplaintRequest request, @AuthenticationPrincipal CustomUserDetails userDetails){
-        complaintService.createComplaint(request, userDetails.getUser());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Complaint created successfully"));
+        Long complaintId =complaintService.createComplaint(request, userDetails.getUser());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Complaint created successfully", complaintId));
     }
     @PostMapping(value = "/update-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> updateAttachment(

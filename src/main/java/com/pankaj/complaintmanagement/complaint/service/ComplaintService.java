@@ -18,7 +18,7 @@ public interface ComplaintService {
     /**
      * Registers a new complaint in the system.
      */
-    void createComplaint(ComplaintRequest request, User user);
+    Long createComplaint(ComplaintRequest request, User user);
 
     /**
      * Updates an existing complaint with full request data.
